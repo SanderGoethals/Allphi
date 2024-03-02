@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/AllPhi.HoGent.RestApi/appsettings.Development.json
+/AllPhi.HoGent.RestApi/appsettings.json
+/AllPhi.HoGent.Datalake.Data/appsettings.json
