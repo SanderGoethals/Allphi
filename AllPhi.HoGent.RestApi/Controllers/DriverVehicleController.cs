@@ -66,6 +66,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
             return Ok();
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
         public DriverVehicleDto MapToDriverVehicleDto(DriverVehicle driverVehicle)
         {
             return new DriverVehicleDto
@@ -75,6 +76,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
             };
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
         public DriverVehicleListDto MapToDriverVehicleListDto(List<DriverVehicle> driverVehicles, int count)
         {
             return new DriverVehicleListDto
