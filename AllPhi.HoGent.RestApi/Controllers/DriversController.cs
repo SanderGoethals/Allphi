@@ -1,9 +1,11 @@
-﻿using AllPhi.HoGent.Datalake.Data.Models;
+﻿using AllPhi.HoGent.Datalake.Data.Helpers;
+using AllPhi.HoGent.Datalake.Data.Models;
 using AllPhi.HoGent.Datalake.Data.Store;
 using AllPhi.HoGent.RestApi.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Runtime.InteropServices;
 
 namespace AllPhi.HoGent.RestApi.Controllers
 {
@@ -22,50 +24,73 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<IActionResult> GetAllDrivers()
+        public async Task<ActionResult<(List<DriverDto>, int)>> GetAllDrivers([Optional] string? sortBy, [Optional] bool isAscending, Pagination? pagination = null)
         {
-            var (drivers, count) = await _driverStore.GetAllDriversAsync();
-            if (drivers == null)
+            var (drivers, count) = await _driverStore.GetAllDriversAsync(sortBy, isAscending, pagination);
+            if (drivers == null || !drivers.Any())
             {
-                return NotFound();
+                return NotFound("Driver not found");
             }
-            List<DriverListDto> driverListDtos = new List<DriverListDto>();
-            driverListDtos.Add(MapToDriverListDto(drivers, count));
+
+            DriverListDto driverListDtos = MapToDriverListDto(drivers, count);
             return Ok(driverListDtos);
-            
+
         }
 
         [HttpGet("getdriverbyid/{driverId}")]
-        public async Task<IActionResult> GetDriverById(Guid driverId)
+        public async Task<ActionResult<DriverDto>> GetDriverById(Guid driverId)
         {
             Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
             if (driver == null)
             {
-                return NotFound();
+                return NotFound("Driver not found");
             }
             DriverDto driverDto = MapToDriverDto(driver);
             return Ok(driverDto);
         }
 
         [HttpPost("adddriver")]
-        public async Task<IActionResult> AddDriver(Driver driver)
+        public async Task<IActionResult> AddDriver([FromBody] DriverDto driverDto)
         {
-            await _driverStore.AddDriver(driver);
-            return Ok();
+            try
+            {
+                Driver driver = MapToDriver(driverDto);
+                await _driverStore.AddDriver(driver);
+                return Ok("Driver successfully added");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("updatedriver")]
-        public async Task<IActionResult> UpdateDriver(Driver driver)
+        public async Task<IActionResult> UpdateDriver([FromBody] DriverDto driverDto)
         {
-            await _driverStore.UpdateDriver(driver);
-            return Ok();
+            try
+            {
+                Driver driver = MapToDriver(driverDto);
+                await _driverStore.UpdateDriver(driver);
+                return Ok("Driver successfully updated!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("deletedriver/{driverId}")]
         public async Task<IActionResult> DeleteDriver(Guid driverId)
         {
-            await _driverStore.RemoveDriver(driverId);
-            return Ok();
+            try
+            {
+                await _driverStore.RemoveDriver(driverId);
+                return Ok($"Driver with ID {driverId} successfully deleted.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // [HttpGet("getdriverincludedfuelcardsbydriverid/{driverId}")]
@@ -85,6 +110,24 @@ namespace AllPhi.HoGent.RestApi.Controllers
                 RegisterNumber = driver.RegisterNumber,
                 TypeOfDriverLicense = driver.TypeOfDriverLicense,
                 Status = driver.Status
+            };
+        }
+
+        [ApiExplorerSettings(IgnoreApi = true)]
+        private Driver MapToDriver(DriverDto driverDto)
+        {
+            return new Driver
+            {
+                Id = driverDto.Id,
+                FirstName = driverDto.FirstName,
+                LastName = driverDto.LastName,
+                City = driverDto.City,
+                Street = driverDto.Street,
+                HouseNumber = driverDto.HouseNumber,
+                PostalCode = driverDto.PostalCode,
+                RegisterNumber = driverDto.RegisterNumber,
+                TypeOfDriverLicense = driverDto.TypeOfDriverLicense,
+                Status = driverDto.Status
             };
         }
 
