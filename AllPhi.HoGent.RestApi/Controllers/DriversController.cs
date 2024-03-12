@@ -24,7 +24,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<IActionResult> GetAllDrivers()
+        public async Task<ActionResult<DriverListDto>> GetAllDrivers()
         {
             var (drivers, count) = await _driverStore.GetAllDriversAsync();
             if (drivers == null)
@@ -37,7 +37,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getdriverbyid/{driverId}")]
-        public async Task<IActionResult> GetDriverById(Guid driverId)
+        public async Task<ActionResult<DriverDto>> GetDriverById(Guid driverId)
         {
             Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
             if (driver == null)
@@ -72,7 +72,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getdriverincludedfuelcardsbydriverid/{driverId}")]
-        public async Task<IActionResult> GetDriverIncludedFuelCardsByDriverId(Guid driverId)
+        public async Task<ActionResult<DriverDto>> GetDriverIncludedFuelCardsByDriverId(Guid driverId)
         {
             var driverWithFuelCards = await _fuelCardDriverStore.GetDriverWithConnectedFuelCardsByDriverId(driverId);
             Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
