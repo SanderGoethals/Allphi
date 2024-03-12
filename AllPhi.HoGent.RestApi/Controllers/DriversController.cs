@@ -1,9 +1,11 @@
-﻿using AllPhi.HoGent.Datalake.Data.Models;
+﻿using AllPhi.HoGent.Datalake.Data.Helpers;
+using AllPhi.HoGent.Datalake.Data.Models;
 using AllPhi.HoGent.Datalake.Data.Store;
 using AllPhi.HoGent.RestApi.Dto;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Runtime.InteropServices;
+using static AllPhi.HoGent.RestApi.Extensions.DriverMapperExtensions;
 
 namespace AllPhi.HoGent.RestApi.Controllers
 {
@@ -22,41 +24,42 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<IActionResult> GetAllDrivers()
+        public async Task<ActionResult<DriverListDto>> GetAllDrivers([Optional] string? sortby, [Optional] bool isAscending, Pagination? pagination)
         {
-            var (drivers, count) = await _driverStore.GetAllDriversAsync();
+            var (drivers, count) = await _driverStore.GetAllDriversAsync(sortby,isAscending,pagination);
             if (drivers == null)
             {
-                return NotFound();
+                return NotFound("No drivers found");
             }
             List<DriverListDto> driverListDtos = new List<DriverListDto>();
             driverListDtos.Add(MapToDriverListDto(drivers, count));
             return Ok(driverListDtos);
-            
         }
 
         [HttpGet("getdriverbyid/{driverId}")]
-        public async Task<IActionResult> GetDriverById(Guid driverId)
+        public async Task<ActionResult<DriverDto>> GetDriverById(Guid driverId)
         {
             Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
             if (driver == null)
             {
                 return NotFound();
             }
-            DriverDto driverDto = MapToDriverDto(driver);
+            var driverDto = MapToDriverDto(driver);
             return Ok(driverDto);
         }
 
         [HttpPost("adddriver")]
-        public async Task<IActionResult> AddDriver(Driver driver)
+        public async Task<IActionResult> AddDriver([FromBody]DriverDto driverDto)
         {
+            Driver driver = MapToDriver(driverDto);
             await _driverStore.AddDriver(driver);
             return Ok();
         }
 
         [HttpPost("updatedriver")]
-        public async Task<IActionResult> UpdateDriver(Driver driver)
+        public async Task<IActionResult> UpdateDriver([FromBody]DriverDto driverDto)
         {
+            Driver driver = MapToDriver(driverDto);
             await _driverStore.UpdateDriver(driver);
             return Ok();
         }
@@ -68,34 +71,18 @@ namespace AllPhi.HoGent.RestApi.Controllers
             return Ok();
         }
 
-        // [HttpGet("getdriverincludedfuelcardsbydriverid/{driverId}")]
-
-        [ApiExplorerSettings(IgnoreApi = true)]
-        private DriverDto MapToDriverDto(Driver driver)
+        [HttpGet("getdriverincludedfuelcardsbydriverid/{driverId}")]
+        public async Task<ActionResult<DriverDto>> GetDriverIncludedFuelCardsByDriverId(Guid driverId)
         {
-            return new DriverDto
+            var driverWithFuelCards = await _fuelCardDriverStore.GetDriverWithConnectedFuelCardsByDriverId(driverId);
+            Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
+            if (driverWithFuelCards == null)
             {
-                Id = driver.Id,
-                FirstName = driver.FirstName,
-                LastName = driver.LastName,
-                City = driver.City,
-                Street = driver.Street,
-                HouseNumber = driver.HouseNumber,
-                PostalCode = driver.PostalCode,
-                RegisterNumber = driver.RegisterNumber,
-                TypeOfDriverLicense = driver.TypeOfDriverLicense,
-                Status = driver.Status
-            };
-        }
-
-        [ApiExplorerSettings(IgnoreApi = true)]
-        private DriverListDto MapToDriverListDto(List<Driver> drivers, int count)
-        {
-            return new DriverListDto
-            {
-                DriverDtos = drivers.Select(MapToDriverDto).ToList(),
-                TotalItems = count
-            };
+                return NotFound();
+            }
+            var driverDto = MapToDriverDto(driver);
+            driverDto.FuelCards = driverWithFuelCards.Select(x => x.FuelCard).ToList();
+            return Ok(driverDto);
         }
     }
 }
