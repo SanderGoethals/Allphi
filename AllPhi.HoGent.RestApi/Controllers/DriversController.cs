@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using AllPhi.HoGent.RestApi.Extensions;
 using static AllPhi.HoGent.RestApi.Extensions.DriverMapperExtensions;
+using System.Runtime.InteropServices;
+using AllPhi.HoGent.Datalake.Data.Helpers;
 
 namespace AllPhi.HoGent.RestApi.Controllers
 {
@@ -24,12 +26,12 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<ActionResult<DriverListDto>> GetAllDrivers()
+        public async Task<ActionResult<DriverListDto>> GetAllDrivers([Optional] string? sortby, [Optional] bool isAscending, Pagination? pagination)
         {
-            var (drivers, count) = await _driverStore.GetAllDriversAsync();
+            var (drivers, count) = await _driverStore.GetAllDriversAsync(sortby,isAscending,pagination);
             if (drivers == null)
             {
-                return NotFound();
+                return NotFound("No drivers found");
             }
             List<DriverListDto> driverListDtos = new List<DriverListDto>();
             driverListDtos.Add(MapToDriverListDto(drivers, count));
