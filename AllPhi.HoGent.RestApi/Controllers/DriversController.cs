@@ -24,15 +24,15 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<ActionResult<DriverListDto>> GetAllDrivers([Optional] string? sortby, [Optional] bool isAscending, Pagination? pagination)
+        public async Task<ActionResult<(List<DriverDto>, int)>> GetAllDrivers([Optional] string? sortBy, [Optional] bool isAscending, Pagination? pagination = null)
         {
-            var (drivers, count) = await _driverStore.GetAllDriversAsync(sortby,isAscending,pagination);
-            if (drivers == null)
+            var (drivers, count) = await _driverStore.GetAllDriversAsync(sortBy, isAscending, pagination);
+            if (drivers == null || !drivers.Any())
             {
                 return NotFound("No drivers found");
             }
-            List<DriverListDto> driverListDtos = new List<DriverListDto>();
-            driverListDtos.Add(MapToDriverListDto(drivers, count));
+
+            DriverListDto driverListDtos = MapToDriverListDto(drivers, count);
             return Ok(driverListDtos);
         }
 
@@ -42,33 +42,54 @@ namespace AllPhi.HoGent.RestApi.Controllers
             Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
             if (driver == null)
             {
-                return NotFound();
+                return NotFound("Driver not found");
             }
             var driverDto = MapToDriverDto(driver);
             return Ok(driverDto);
         }
 
         [HttpPost("adddriver")]
-        public async Task<IActionResult> AddDriver([FromBody]DriverDto driverDto)
+        public async Task<IActionResult> AddDriver([FromBody] DriverDto driverDto)
         {
-            Driver driver = MapToDriver(driverDto);
-            await _driverStore.AddDriver(driver);
-            return Ok();
+            try
+            {
+                Driver driver = MapToDriver(driverDto);
+                await _driverStore.AddDriver(driver);
+                return Ok("Driver successfully added");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("updatedriver")]
         public async Task<IActionResult> UpdateDriver([FromBody]DriverDto driverDto)
         {
-            Driver driver = MapToDriver(driverDto);
-            await _driverStore.UpdateDriver(driver);
-            return Ok();
+            try
+            {
+                Driver driver = MapToDriver(driverDto);
+                await _driverStore.UpdateDriver(driver);
+                return Ok("Driver successfully updated!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("deletedriver/{driverId}")]
         public async Task<IActionResult> DeleteDriver(Guid driverId)
         {
-            await _driverStore.RemoveDriver(driverId);
-            return Ok();
+            try
+            {
+                await _driverStore.RemoveDriver(driverId);
+                return Ok($"Driver with ID {driverId} successfully deleted.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("getdriverincludedfuelcardsbydriverid/{driverId}")]
