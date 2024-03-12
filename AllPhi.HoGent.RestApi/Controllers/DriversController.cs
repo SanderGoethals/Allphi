@@ -1,13 +1,11 @@
-﻿using AllPhi.HoGent.Datalake.Data.Models;
+﻿using AllPhi.HoGent.Datalake.Data.Helpers;
+using AllPhi.HoGent.Datalake.Data.Models;
 using AllPhi.HoGent.Datalake.Data.Store;
 using AllPhi.HoGent.RestApi.Dto;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using AllPhi.HoGent.RestApi.Extensions;
-using static AllPhi.HoGent.RestApi.Extensions.DriverMapperExtensions;
 using System.Runtime.InteropServices;
-using AllPhi.HoGent.Datalake.Data.Helpers;
+using static AllPhi.HoGent.RestApi.Extensions.DriverMapperExtensions;
 
 namespace AllPhi.HoGent.RestApi.Controllers
 {
