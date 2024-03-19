@@ -18,7 +18,8 @@ namespace AllPhi.HoGent.RestApi.Extensions
                 FuelCardFuelTypesDto = fuelCard.FuelCardFuelTypes.Select(f => new FuelCardFuelTypeDto
                 {
                     FuelType = f.FuelType,
-                    FuelCardId = f.FuelCardId
+                    FuelCardId = f.FuelCardId,
+                    Id = f.Id
                 }).ToList(),
                 Drivers = fuelCard.Drivers,
                 Status = fuelCard.Status

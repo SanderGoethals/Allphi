@@ -49,7 +49,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpPost("addfuelcard")]
-        public async Task<IActionResult> AddFuelCard(FuelCardDto fuelCardDto)
+        public async Task<IActionResult> AddFuelCard([FromBody]FuelCardDto fuelCardDto)
         {
             FuelCard fuelCard = MapToFuelCard(fuelCardDto);
             await _fuelCardStore.AddFuelCard(fuelCard);
