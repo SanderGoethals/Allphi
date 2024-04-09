@@ -52,6 +52,15 @@ namespace AllPhi.HoGent.RestApi.Controllers
         [HttpPost("addvehicle")]
         public async Task<IActionResult> AddVehicle(VehicleDto vehicleDto)
         {
+            if (_vehicleStore.VehicleWithChassisNumberExists(vehicleDto.ChassisNumber))
+            {
+                return BadRequest("Vehicle with this chassis number already exists");
+                
+            }
+            if (_vehicleStore.VehicleWithLicensePlateExists(vehicleDto.LicensePlate))
+            {
+                return BadRequest("Vehicle with this license plate already exists");
+            }
             Vehicle vehicle = MapToVehicle(vehicleDto);
             await _vehicleStore.AddVehicle(vehicle);
             return Ok();

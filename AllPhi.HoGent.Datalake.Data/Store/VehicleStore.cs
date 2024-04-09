@@ -52,9 +52,10 @@ namespace AllPhi.HoGent.Datalake.Data.Store
 
         public async Task AddVehicle(Vehicle vehicle)
         {
-            bool existingvehicle = await _dbContext.Vehicles.AnyAsync(x => x.ChassisNumber == vehicle.ChassisNumber);
+            bool existingvehicle = VehicleWithChassisNumberExists(vehicle.ChassisNumber);
+            bool existingLicensePlate = VehicleWithLicensePlateExists(vehicle.LicensePlate);
 
-            if (!existingvehicle)
+            if (!existingvehicle && !existingLicensePlate)
             {
                 try
                 {
@@ -125,6 +126,16 @@ namespace AllPhi.HoGent.Datalake.Data.Store
                 await _dbContext.Database.RollbackTransactionAsync();
                 throw;
             }
+        }
+
+        public bool VehicleWithChassisNumberExists(string chassisNumber)
+        {
+            return _dbContext.Vehicles.Any(x => x.ChassisNumber == chassisNumber);
+        }
+
+        public bool VehicleWithLicensePlateExists(string licensePlate)
+        {
+            return _dbContext.Vehicles.Any(x => x.LicensePlate == licensePlate);
         }
     }
 }

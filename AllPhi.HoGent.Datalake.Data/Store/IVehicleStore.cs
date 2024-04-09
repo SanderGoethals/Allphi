@@ -16,5 +16,7 @@ namespace AllPhi.HoGent.Datalake.Data.Store
         Task AddVehicle(Vehicle vehicle);
         Task UpdateVehicle(Vehicle vehicle);
         Task RemoveVehicle(Guid fuelCardId);
+        bool VehicleWithChassisNumberExists(string chassisNumber);
+        bool VehicleWithLicensePlateExists(string licensePlate);
     }
 }
