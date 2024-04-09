@@ -2,6 +2,7 @@
 using AllPhi.HoGent.Datalake.Data.Models;
 using AllPhi.HoGent.Datalake.Data.Store;
 using AllPhi.HoGent.RestApi.Dto;
+using AllPhi.HoGent.RestApi.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Runtime.InteropServices;
@@ -51,6 +52,15 @@ namespace AllPhi.HoGent.RestApi.Controllers
         [HttpPost("adddriver")]
         public async Task<IActionResult> AddDriver([FromBody] DriverDto driverDto)
         {
+            if (_driverStore.DriverWithRegisterNumberExists(driverDto.RegisterNumber))
+            {
+                return BadRequest("Driver with this register number already exists");
+            }
+
+            if (IsValidDriverRegisterNumberCheck.IsValidDriverRegisterNumber(driverDto.RegisterNumber))
+            {
+                return BadRequest("The provided register number is not valid.");
+            }
             try
             {
                 Driver driver = MapToDriver(driverDto);
@@ -64,7 +74,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpPost("updatedriver")]
-        public async Task<IActionResult> UpdateDriver([FromBody]DriverDto driverDto)
+        public async Task<IActionResult> UpdateDriver([FromBody] DriverDto driverDto)
         {
             try
             {

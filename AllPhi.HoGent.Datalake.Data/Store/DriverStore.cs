@@ -54,9 +54,9 @@ namespace AllPhi.HoGent.Datalake.Data.Store
 
         public async Task AddDriver(Driver driver)
         {
-            bool existingFuelCard = await _dbContext.Drivers.AnyAsync(x => x.RegisterNumber == driver.RegisterNumber);
+            bool existingDriver = await _dbContext.Drivers.AnyAsync(x => x.RegisterNumber == driver.RegisterNumber);
 
-            if (!existingFuelCard)
+            if (!existingDriver)
             {
                 try
                 {
@@ -130,6 +130,11 @@ namespace AllPhi.HoGent.Datalake.Data.Store
                 await _dbContext.Database.RollbackTransactionAsync();
                 throw;
             }
+        }
+
+        public bool DriverWithRegisterNumberExists(string registerNumber)
+        {
+            return _dbContext.Drivers.Any(x => x.RegisterNumber == registerNumber);
         }
     }
 }

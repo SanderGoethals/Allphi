@@ -16,5 +16,6 @@ namespace AllPhi.HoGent.Datalake.Data.Store
         Task AddDriver(Driver driver);
         Task UpdateDriver(Driver driver);
         Task RemoveDriver(Guid driverId);
+        bool DriverWithRegisterNumberExists(string registerNumber);
     }
 }
