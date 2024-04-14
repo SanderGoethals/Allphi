@@ -1,0 +1,173 @@
+﻿@page "/vehicles"
+
+@using AllPhi.HoGent.Blazor.Components
+@using AllPhi.HoGent.Blazor.Services
+@using AllPhi.HoGent.Blazor.Dto
+
+@inject IDriverServices _driverService
+@inject IVehicleServices _vehicleService
+@inject IDriverVehicleServices _driverVehicleService
+
+<PageTitle>Vehicles</PageTitle>
+
+@if (_isLoading)
+{
+    <LoadingSpinner IsLoading="@_isLoading" />
+}
+
+@code {
+    private VehicleListDto? _vehicleListDto;
+    private DriverListDto? _driverListDto;
+
+    private VehicleDto _selectedVehicleDto = new();
+    private List<DriverVehicleDto> _driverVehicleDtos = new();
+    private List<DriverDto> _checkedDriver = new();
+
+    private bool _vehicleAdded = false;
+    private bool _vehicleUpdated = false;
+    private bool _vehicleDeleted = false;
+
+    private bool _showDeleteConfirmation = false;
+    private bool _showSendConfirmation = false;
+    private bool _error = false;
+    private bool _addNewFuelCard = false;
+    private bool _selectedVehicle = false;
+
+    public string ErrorTitle { get; set; } = string.Empty;
+    public string ErrorMessage { get; set; } = string.Empty;
+
+    private bool _isSortAscending = true;
+    private string _currentSortColumn = "date";
+    private int _pageSize = 5;
+    private int _pageNumber = 1;
+    private int _totalPages;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVehicleListDto();
+        _driverListDto = await _driverService.GetAllDriversAsync();
+        _isLoading = false;
+    }
+
+    private async Task LoadVehicleListDto()
+    {
+        _vehicleListDto = await _vehicleService.GetAllVehicleAsync(_currentSortColumn, _isSortAscending, _pageNumber, _pageSize);
+        _totalPages = (int)Math.Ceiling((double)_vehicleListDto.TotalItems / _pageSize);
+    }
+
+    private void AddNewVehicle()
+    {
+        SetBoolDefault();
+
+        _selectedVehicle = false;
+        _addNewFuelCard = true;
+    }
+
+    private void SetBoolDefault()
+    {
+        _showSendConfirmation = false;
+        _error = false;
+    }
+
+    private async Task SelectVehicle(VehicleDto selectedVehicle)
+    {
+        _selectedVehicleDto = selectedVehicle;
+        _driverVehicleDtos = (await _driverVehicleService.GetVehicleWithConnectedDriversByVehicleId(_selectedVehicleDto.Id)).Item1;
+        var v = _driverVehicleDtos.Select(x => _driverListDto.DriverDtos.Where(r => x.DriverId == r.Id).ToList()).ToList();
+        _checkedDriver = v.SelectMany(x => x.Select(x => x).ToList()).ToList();
+        _showSendConfirmation = false;
+        _selectedVehicle = true;
+        _addNewFuelCard = false;
+        _vehicleAdded = false;
+        _vehicleUpdated = false;
+        _vehicleDeleted = false;
+    }
+
+    private async Task SaveNewUser(VehicleDto vehicleDto)
+    {
+        try
+        {
+            if (vehicleDto is not null)
+            {
+                var (status, statusMessage) = await _vehicleService.AddFVehicleAsync(vehicleDto);
+                if (status)
+                    var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _driverVehicleService.UpdateVehicleWithDrivers(vehicleDto.Id, vehicleDto.DriversDto.Select(x => x.Id).ToList());
+                if (!status)
+                {
+                    ErrorTitle = " Oei, er ging iets verkeerd tijdens het toevoegen.";
+                    ErrorMessage = statusMessage;
+                    _error = true;
+                }
+                else
+                    _vehicleAdded = true;
+
+                _showSendConfirmation = true;
+                _vehicleListDto = await _vehicleService.GetAllVehicleAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het toevoegen.";
+            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het toevoegen. Error: {ex.Message}";
+            _error = true;
+        }
+    }
+
+    private async Task DeleteVehicle(VehicleDto vehicleDto)
+    {
+        try
+        {
+            if (vehicleDto is not null)
+            {
+                await _vehicleService.DeleteVehicleAsync(vehicleDto.Id);
+
+                _showSendConfirmation = true;
+                _vehicleDeleted = true;
+
+                _vehicleListDto = await _vehicleService.GetAllVehicleAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+            _showDeleteConfirmation = false;
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het verwijderen";
+            ErrorMessage = "Excuses! Er ging iets verkeerd tijdens het verwijderen.";
+            _error = true;
+            _showDeleteConfirmation = false;
+        }
+    }
+
+    private async Task UpdateSelectedUser()
+    {
+        try
+        {
+            if (_selectedVehicleDto is not null)
+            {
+                var updatedvehicle = await _vehicleService.UpdateVehicleAsync(_selectedVehicleDto);
+                var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _driverVehicleService.UpdateVehicleWithDrivers(_selectedVehicleDto.Id, _checkedDriver.Select(x => x.Id).ToList());
+
+                if (!updatedvehicle || !statusRelatedDrivers)
+                {
+                    ErrorTitle = " Oei, er ging iets verkeerd tijdens het updaten.";
+                    ErrorMessage = statusMessageRelatedDrivers;
+                    _error = true;
+                }
+                else
+                    _vehicleUpdated = true;
+
+                _showSendConfirmation = true;
+                _vehicleListDto = await _vehicleService.GetAllVehicleAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het bijwerken";
+            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het bijwerken. Error: {ex.Message}";
+            _error = true;
+        }
+    }
+
+}
