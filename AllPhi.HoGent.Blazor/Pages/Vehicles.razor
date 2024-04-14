@@ -6,7 +6,7 @@
 
 @inject IDriverServices _driverService
 @inject IVehicleServices _vehicleService
-@inject IFuelCardDriverServices _driverVehicleService
+@inject IDriverVehicleServices _driverVehicleService
 
 <PageTitle>Vehicles</PageTitle>
 
@@ -18,6 +18,14 @@
 @code {
     private VehicleListDto? _vehicleListDto;
     private DriverListDto? _driverListDto;
+
+    private VehicleDto _selectedVehicleDto = new();
+    private List<DriverVehicleDto> _driverVehicleDtos = new();
+    private List<DriverDto> _checkedDriver = new();
+
+    private bool _vehicleAdded = false;
+    private bool _vehicleUpdated = false;
+    private bool _vehicleDeleted = false;
 
     private bool _showSendConfirmation = false;
     private bool _error = false;
@@ -56,5 +64,19 @@
     {
         _showSendConfirmation = false;
         _error = false;
+    }
+
+    private async Task SelectVehicle(VehicleDto selectedVehicle)
+    {
+        _selectedVehicleDto = selectedVehicle;
+        _driverVehicleDtos = (await _driverVehicleService.GetVehicleWithConnectedDriversByVehicleId(_selectedVehicleDto.Id)).Item1;
+        var v = _driverVehicleDtos.Select(x => _driverListDto.DriverDtos.Where(r => x.DriverId == r.Id).ToList()).ToList();
+        _checkedDriver = v.SelectMany(x => x.Select(x => x).ToList()).ToList();
+        _showSendConfirmation = false;
+        _selectedVehicle = true;
+        _addNewFuelCard = false;
+        _vehicleAdded = false;
+        _vehicleUpdated = false;
+        _vehicleDeleted = false;
     }
 }
