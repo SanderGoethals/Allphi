@@ -32,6 +32,9 @@
     private bool _addNewFuelCard = false;
     private bool _selectedVehicle = false;
 
+    public string ErrorTitle { get; set; } = string.Empty;
+    public string ErrorMessage { get; set; } = string.Empty;
+
     private bool _isSortAscending = true;
     private string _currentSortColumn = "date";
     private int _pageSize = 5;
@@ -78,5 +81,36 @@
         _vehicleAdded = false;
         _vehicleUpdated = false;
         _vehicleDeleted = false;
+    }
+
+    private async Task SaveNewUser(VehicleDto vehicleDto)
+    {
+        try
+        {
+            if (vehicleDto is not null)
+            {
+                var (status, statusMessage) = await _vehicleService.AddFVehicleAsync(vehicleDto);
+                if (status)
+                    var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _driverVehicleService.UpdateVehicleWithDrivers(vehicleDto.Id, vehicleDto.DriversDto.Select(x => x.Id).ToList());
+                if (!status)
+                {
+                    ErrorTitle = " Oei, er ging iets verkeerd tijdens het toevoegen.";
+                    ErrorMessage = statusMessage;
+                    _error = true;
+                }
+                else
+                    _vehicleAdded = true;
+
+                _showSendConfirmation = true;
+                _vehicleListDto = await _vehicleService.GetAllVehicleAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het toevoegen.";
+            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het toevoegen. Error: {ex.Message}";
+            _error = true;
+        }
     }
 }

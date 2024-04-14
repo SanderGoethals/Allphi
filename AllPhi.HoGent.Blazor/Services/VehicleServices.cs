@@ -50,5 +50,29 @@ namespace AllPhi.HoGent.Blazor.Services
             var vehicelDto = JsonConvert.DeserializeObject<VehicleDto>(responseContent);
             return vehicelDto ?? new();
         }
+
+        public async Task<(bool, string message)> AddFVehicleAsync(VehicleDto vehicleDto)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(vehicleDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/vehicles/addvehicle", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorResponse = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error adding vehicle: {errorResponse}");
+                    return (false, errorResponse);
+                }
+
+                return (true, "Added succesfully");
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }
