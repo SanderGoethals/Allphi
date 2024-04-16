@@ -51,6 +51,136 @@
     }
 </style>
 
+@using AllPhi.HoGent.Blazor.Dto.Enums
+@using AllPhi.HoGent.Blazor.Dto
+
+@code {
+    public enum WizardStep
+    {
+        VehicleDetail_1,
+        VehicleDetail_2,
+        VehicleDetail_3,
+        RelatedDrivers,
+        Review
+    }
+
+    private bool _readyForNext = false;
+
+    private WizardStep currentStep = WizardStep.VehicleDetail_1;
+
+    public string SelectedChassisNumber { get; set; } = string.Empty;
+    public string SelectedLicensePlate { get; set; } = string.Empty;
+    public CarBrand SelectedCarBrand { get; set; } = CarBrand.Audi;
+    public FuelType SelectedFuelType { get; set; } = FuelType.Benzine;
+    public TypeOfCar SelectedTypeOfCar { get; set; } = TypeOfCar.PassangerCar;
+    public VehicleColor SelectedVehicleColor { get; set; } = VehicleColor.Black;
+    public NumberOfDoors SelectedNumberOfDoors { get; set; } = NumberOfDoors.FiveDoors;
+    public Status SelectedStatus { get; set; } = Status.Active;
+
+    private List<DriverDto> _checkedDriver = new();
+
+    [Parameter]
+    public List<DriverDto>? Drivers { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<VehicleDto> OnSave { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsFormValid();
+    }
+
+    private async Task HandleSave()
+    {
+        var vehicle = new VehicleDto
+            {
+                Id = Guid.NewGuid(),
+                ChassisNumber = SelectedChassisNumber,
+                LicensePlate = SelectedLicensePlate,
+                CarBrand = SelectedCarBrand,
+                Color = SelectedVehicleColor,
+                FuelType = SelectedFuelType,
+                NumberOfDoors = SelectedNumberOfDoors,
+                TypeOfCar = SelectedTypeOfCar,
+                Status = SelectedStatus,
+                DriversDto = _checkedDriver,
+            };
+
+        await OnSave.InvokeAsync(vehicle);
+    }
+
+    private void CheckDriverChanged(DriverDto driverDto)
+    {
+        if (_checkedDriver.Contains(driverDto))
+            _checkedDriver.Remove(driverDto);
+        else
+            _checkedDriver.Add(driverDto);
+    }
+
+    void GoToPreviousStep()
+    {
+        if (currentStep > WizardStep.VehicleDetail_1)
+        {
+            currentStep--;
+        }
+    }
+
+    void GoToNextStep()
+    {
+        if (currentStep < WizardStep.Review)
+        {
+            currentStep++;
+        }
+        IsFormValid();
+    }
+
+
+    private void OnInput(ChangeEventArgs e, string field)
+    {
+        if (e?.Value != null)
+        {
+            if (field == "chassisnumber")
+                SelectedChassisNumber = e.Value.ToString();
+            else if (field == "licenseplate")
+                SelectedLicensePlate = e.Value.ToString();
+        }
+        IsFormValid();
+    }
+
+    private void IsFormValid()
+    {
+        if (currentStep == WizardStep.VehicleDetail_1)
+        {
+            if (string.IsNullOrEmpty(SelectedLicensePlate) ||
+                string.IsNullOrEmpty(SelectedChassisNumber))
+                _readyForNext = false;
+            else
+                _readyForNext = true;
+        }
+    }
+
+    private string GetIconClass(int step) => step switch
+    {
+        0 => "fas fa-user-edit",
+        1 => "fas fa-user-tag",
+        2 => "fas fa-user-check",
+        3 => "fas fa-list",
+        4 => "fas fa-check-circle",
+        _ => ""
+    };
+
+    private void GoToStep(int step)
+    {
+        currentStep = (WizardStep)step;
+    }
+
+    private void AttemptToGoToStep(int step)
+    {
+        if (_readyForNext || step < (int)currentStep)
+        {
+            GoToStep(step);
+        }
+    }
 }
 
 
