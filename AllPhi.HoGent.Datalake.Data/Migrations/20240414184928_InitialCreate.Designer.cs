@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AllPhi.HoGent.Datalake.Data.Migrations
 {
     [DbContext(typeof(AllPhiDatalakeContext))]
-    [Migration("20240414202008_test")]
-    partial class test
+    [Migration("20240414184928_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
