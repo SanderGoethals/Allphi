@@ -62,4 +62,41 @@
     }
 </style>
 
+
+
+@code {
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public int ItemsPerPage { get; set; } = 5;
+
+    private int StartPage;
+    private int EndPage;
+
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+    [Parameter] public EventCallback<int> OnItemsPerPageChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // Bereken StartPage en EndPage, bijvoorbeeld tonen van 5 opeenvolgende pagina's
+        int pageWindow = 5;
+        StartPage = Math.Max(1, CurrentPage - pageWindow / 2);
+        EndPage = Math.Min(TotalPages, StartPage + pageWindow - 1);
+
+        // Aanpassing als we bij de laatste pagina's zijn en het venster kleiner is dan 5
+        if (EndPage - StartPage < pageWindow - 1)
+        {
+            StartPage = Math.Max(1, EndPage - pageWindow + 1);
+        }
+    }
+
+    private async Task SetPage(int page)
+    {
+        if (page < 1 || page > TotalPages) return; // Voorkom ongeldige paginawaarden
+        await OnPageChanged.InvokeAsync(page);
+    }
+
+    private void ChangeItemsPerPage(int itemsPerPage)
+    {
+        OnItemsPerPageChanged.InvokeAsync(itemsPerPage);
+    }
 }
