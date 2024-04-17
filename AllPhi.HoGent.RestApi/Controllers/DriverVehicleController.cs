@@ -20,29 +20,29 @@ namespace AllPhi.HoGent.RestApi.Controllers
             _driverVehicleStore = driverVehicleStore;
         }
 
-        [HttpGet("getalldrivervehicles")]
-        public async Task<ActionResult<DriverVehicleListDto>> GetAllDriverVehicles()
-        {
-            var (driverVehicles, count) = await _driverVehicleStore.GetAllDriverVehicleAsync();
-            if (driverVehicles == null)
-            {
-                return NotFound();
-            }
-            List<DriverVehicleListDto> driverVehicleListDtos = new List<DriverVehicleListDto>();
-            driverVehicleListDtos.Add(MapToDriverVehicleListDto(driverVehicles, count));
-            return Ok(driverVehicleListDtos);
-        }
+        //[HttpGet("getalldrivervehicles")]
+        //public async Task<ActionResult<DriverVehicleListDto>> GetAllDriverVehicles()
+        //{
+        //    var (driverVehicles, count) = await _driverVehicleStore.GetAllDriverVehicleAsync();
+        //    if (driverVehicles == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    List<DriverVehicleListDto> driverVehicleListDtos = new List<DriverVehicleListDto>();
+        //    driverVehicleListDtos.Add(MapToDriverVehicleListDto(driverVehicles, count));
+        //    return Ok(driverVehicleListDtos);
+        //}
 
-        [HttpGet("getdriverwithvehiclesbydriverid/{driverId}")]
-        public async Task<ActionResult<DriverVehicleListDto>> GetDriverWithVehiclesByDriverId(Guid driverId)
-        {
-            var driverVehicles = await _driverVehicleStore.GetDriverWithConnectedVehicleByDriverId(driverId);
-            if (driverVehicles == null)
-            {
-                return NotFound();
-            }
-            return Ok(MapToDriverVehicleListDto(driverVehicles, driverVehicles.Count));
-        }
+        //[HttpGet("getdriverwithvehiclesbydriverid/{driverId}")]
+        //public async Task<ActionResult<DriverVehicleListDto>> GetDriverWithVehiclesByDriverId(Guid driverId)
+        //{
+        //    var driverVehicles = await _driverVehicleStore.GetDriverWithConnectedVehicleByDriverId(driverId);
+        //    if (driverVehicles == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return Ok(MapToDriverVehicleListDto(driverVehicles, driverVehicles.Count));
+        //}
 
         [HttpGet("getvehiclewithdrivers/{vehicleId}")]
         public async Task<ActionResult<DriverVehicleListDto>> GetVehicleWithDriversByVehicleId(Guid vehicleId)
@@ -52,7 +52,9 @@ namespace AllPhi.HoGent.RestApi.Controllers
             {
                 return NotFound();
             }
-            return Ok(MapToDriverVehicleListDto(driverVehicles, driverVehicles.Count));
+
+            var driverVehicleDtos = MapToDriverVehicleListDto(driverVehicles);
+            return Ok(driverVehicleDtos);
         }
 
         [HttpPost("updatedrivervehiclesbydriverid/{driverId}")]
