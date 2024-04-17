@@ -19,13 +19,15 @@ namespace AllPhi.HoGent.RestApi.Extensions
         }
 
         [ApiExplorerSettings(IgnoreApi = true)]
-        public static DriverVehicleListDto MapToDriverVehicleListDto(List<DriverVehicle> driverVehicles, int count)
+        public static List<DriverVehicleDto> MapToDriverVehicleListDto(List<DriverVehicle> driverVehicles)
         {
-            return new DriverVehicleListDto
+            return driverVehicles.Select(d => new DriverVehicleDto
             {
-                DriverVehicleDtos = driverVehicles.Select(MapToDriverVehicleDto).ToList(),
-                TotalItems = count
-            };
+                DriverId = d.DriverId,
+                VehicleId = d.VehicleId,
+                Driver = d.Driver,
+                Vehicle = d.Vehicle
+            }).ToList();
         }
     }
 }
