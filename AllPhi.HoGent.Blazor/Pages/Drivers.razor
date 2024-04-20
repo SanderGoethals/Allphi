@@ -98,7 +98,7 @@
         _checkedVehicle = a.SelectMany(x => x.Select(x => x).ToList()).ToList();
 
         _showSendConfirmation = false;
-               _selectedDriver = true;
+        _selectedDriver = true;
         _addNewFuelCard = false;
         _driverAdded = false;
         _driverUpdated = false;
@@ -161,6 +161,23 @@
             ErrorMessage = "Excuses! Er ging iets verkeerd tijdens het verwijderen.";
             _error = true;
             _showDeleteConfirmation = false;
+        }
+    }
+
+    private async Task UpdateSelectedUser()
+    {
+        try
+        {
+            if (_selectedDriverDto is not null)
+            {
+                var updateFuelCard = await _driverService.UpdateDriverAsync(_selectedDriverDto);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = "Oei, er ging iets mis tijdens het bewerken.";
+            ErrorMessage = $"Excuses! Er ging iets mis tijdens het bewerken. Error: {ex.Message}";
+            _error = true;
         }
     }
 }

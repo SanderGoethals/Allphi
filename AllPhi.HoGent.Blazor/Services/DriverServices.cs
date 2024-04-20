@@ -75,5 +75,22 @@ namespace AllPhi.HoGent.Blazor.Services
 
             return true;
         }
+
+        public async Task<bool> UpdateDriverAsync(DriverDto driverDto)
+        {
+            var json = JsonConvert.SerializeObject(driverDto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"api/drivers/updatedriver", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error updating driver: {errorResponse}");
+                return false;
+            }
+
+            return true;
+        }
     }
 }
