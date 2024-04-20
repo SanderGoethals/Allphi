@@ -66,7 +66,6 @@
 
     private WizardStep currentStep = WizardStep.DriverDetails;
 
-
     public string SelectedFirstName { get; set; } = string.Empty;
     public string SelectedLastName { get; set; } = string.Empty;
     public int SelectedRegisternumber { get; set; }
@@ -102,5 +101,28 @@
             else
                 _readyForNext = true;
         }
+    }
+
+    private void OnInput(ChangeEventArgs e, string field)
+    {
+        var v = e?.Value?.ToString();
+        if (!string.IsNullOrEmpty(v))
+        {
+            if (field == "firstname")
+                SelectedFirstName = e.Value.ToString();
+            else if (field == "lastname")
+                SelectedLastName = e.Value.ToString();
+            else if (field == "registernumber")
+                SelectedRegisternumber = int.Parse(e.Value.ToString());
+            else if (field == "street")
+                SelectedStreet = e.Value.ToString();
+            else if (field == "housenumber")
+                SelectedHouseNumber = e.Value.ToString();
+            else if (field == "city")
+                SelectedCity = e.Value.ToString();
+            else if (field == "postalcode")
+                SelectedPostalCode = e.Value.ToString();
+        }
+        IsFormValid();
     }
 }
