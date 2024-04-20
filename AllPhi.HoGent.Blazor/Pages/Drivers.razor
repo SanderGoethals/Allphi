@@ -171,6 +171,24 @@
             if (_selectedDriverDto is not null)
             {
                 var updateFuelCard = await _driverService.UpdateDriverAsync(_selectedDriverDto);
+
+                var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _fuelCardDriverService.UpdateDriverWithFuelCards(_selectedDriverDto.Id, _checkedfuelCard.Select(x => x.Id)
+                                                                                                                                                                        .ToList());
+                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(_selectedDriverDto.Id, _checkedfuelCard.Select(x => x.Id)
+                                                                                                                                                                        .ToList());
+                if (!updateFuelCard || !statusRelatedDrivers)
+                {
+                    ErrorTitle = "Oei, er ging iets verkeerd tijdens het updaten.";
+                    ErrorMessage = statusMessageRelatedDrivers;
+                    _error = true;
+                }
+                else
+                {
+                    _driverDeleted = true;
+
+                    _showSendConfirmation = true;
+                    _driverListDto = await _driverService.GetAllDriversAsync();
+                }
             }
         }
         catch (Exception ex)
