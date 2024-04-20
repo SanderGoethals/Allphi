@@ -1,0 +1,209 @@
+﻿@using AllPhi.HoGent.Blazor.Dto
+@using AllPhi.HoGent.Blazor.Dto.Enums
+
+<style>
+    .review {
+        font-weight: bolder;
+    }
+
+        .review span {
+            font-weight: normal;
+        }
+
+    .klantenportaal-info-add-new-user {
+        border: 1px #2099c6 solid;
+        border-radius: 5px;
+        padding: 5px;
+        margin-top: revert;
+    }
+
+    .wizard-steps {
+        font-size: 2rem;
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+    }
+
+    .wizard-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .wizard-step {
+        cursor: pointer;
+    }
+
+    .wizard-line {
+        width: 7vw;
+        height: 2px;
+        background-color: #ccc;
+        margin: 0 8px;
+    }
+
+    .wizard-line-active {
+        background-color: #2099c6;
+    }
+
+    .wizard-step-active {
+        color: #2099c6;
+    }
+
+    .wizard-step-inactive {
+        color: gray;
+    }
+</style>
+
+
+@code {
+
+    public enum WizardStep
+    {
+        DriverDetails,
+        DriverAdress,
+        Status,
+        Related,
+        Review
+    }
+
+    private bool _readyForNext = false;
+
+    private WizardStep currentStep = WizardStep.DriverDetails;
+
+    public string SelectedFirstName { get; set; } = string.Empty;
+    public string SelectedLastName { get; set; } = string.Empty;
+    public string SelectedRegisternumber { get; set; }
+
+    public string SelectedStreet { get; set; } = string.Empty;
+    public string SelectedHouseNumber { get; set; } = string.Empty;
+    public string SelectedCity { get; set; } = string.Empty;
+    public string SelectedPostalCode { get; set; } = string.Empty;
+
+    public TypeOfDriverLicense TypeOfDriverLicense { get; set; } = TypeOfDriverLicense.B;
+    public Status SelectedStatus { get; set; } = Status.Active;
+    private List<VehicleDto> _checkedVehicles = new();
+    private List<FuelCardDto> _checkedFuelCards = new();
+
+    [Parameter]
+    public EventCallback<DriverDto> OnSave { get; set; }
+
+    [Parameter]
+    public List<VehicleDto>? Vehicles { get; set; } = new();
+
+    [Parameter]
+    public List<FuelCardDto>? FuelCards { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsFormValid();
+    }
+
+    private async Task HandleSave()
+    {
+        var driver = new DriverDto
+            {
+                Id = Guid.NewGuid(),
+                FirstName = SelectedFirstName,
+                LastName = SelectedLastName,
+                RegisterNumber = SelectedRegisternumber,
+                Street = SelectedStreet,
+                HouseNumber = SelectedHouseNumber,
+                City = SelectedCity,
+                PostalCode = SelectedPostalCode,
+                Status = SelectedStatus,
+                FuelCardDtos = _checkedFuelCards,
+                TypeOfDriverLicense = TypeOfDriverLicense,
+                VehicleDtos = _checkedVehicles
+            };
+        await OnSave.InvokeAsync(driver);
+    }
+
+    private void IsFormValid()
+    {
+        if (currentStep == WizardStep.DriverDetails)
+        {
+            if (string.IsNullOrEmpty(SelectedFirstName) ||
+                string.IsNullOrEmpty(SelectedLastName) ||
+                string.IsNullOrEmpty(SelectedRegisternumber.ToString()))
+                _readyForNext = false;
+            else
+                _readyForNext = true;
+        }
+        else if (currentStep == WizardStep.DriverAdress)
+        {
+            if (string.IsNullOrEmpty(SelectedStreet) ||
+                string.IsNullOrEmpty(SelectedHouseNumber) ||
+                string.IsNullOrEmpty(SelectedCity) ||
+                string.IsNullOrEmpty(SelectedPostalCode))
+                _readyForNext = false;
+            else
+                _readyForNext = true;
+        }
+    }
+
+    private void OnInput(ChangeEventArgs e, string field)
+    {
+        var v = e?.Value?.ToString();
+        if (!string.IsNullOrEmpty(v))
+        {
+            if (field == "firstname")
+                SelectedFirstName = e.Value.ToString();
+            else if (field == "lastname")
+                SelectedLastName = e.Value.ToString();
+            else if (field == "registernumber")
+                SelectedRegisternumber = e.Value.ToString();
+            else if (field == "street")
+                SelectedStreet = e.Value.ToString();
+            else if (field == "housenumber")
+                SelectedHouseNumber = e.Value.ToString();
+            else if (field == "city")
+                SelectedCity = e.Value.ToString();
+            else if (field == "postalcode")
+                SelectedPostalCode = e.Value.ToString();
+        }
+        IsFormValid();
+    }
+
+    private string GetIconClass(int step) => step switch
+    {
+        0 => "fas fa-user-edit",
+        1 => "fas fa-user-tag",
+        2 => "fas fa-user-check",
+        3 => "fas fa-list",
+        4 => "fas fa-check-circle",
+        _ => ""
+    };
+
+    void GoToPreviousStep()
+    {
+        if (currentStep > WizardStep.DriverDetails)
+        {
+            currentStep--;
+        }
+    }
+
+    void GoToNextStep()
+    {
+        if (currentStep < WizardStep.Review)
+        {
+            currentStep++;
+        }
+        IsFormValid();
+    }
+
+    private void CheckFuelCardsChanged(FuelCardDto fuelCardDto)
+    {
+        if (_checkedFuelCards.Contains(fuelCardDto))
+            _checkedFuelCards.Remove(fuelCardDto);
+        else
+            _checkedFuelCards.Add(fuelCardDto);
+    }
+
+    private void CheckVehiclesChanged(VehicleDto vehicleDto)
+    {
+        if (_checkedVehicles.Any(x => x == vehicleDto))
+            _checkedVehicles.Remove(vehicleDto);
+        else
+            _checkedVehicles.Add(vehicleDto);
+    }
+
+}

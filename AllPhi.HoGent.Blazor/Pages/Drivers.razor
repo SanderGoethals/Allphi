@@ -1,0 +1,266 @@
+﻿@page "/drivers"
+
+@using AllPhi.HoGent.Blazor.Services
+@using AllPhi.HoGent.Blazor.Dto
+@using AllPhi.HoGent.Blazor.Dto.Enums
+@using AllPhi.HoGent.Blazor.Components
+
+@inject IDriverServices _driverService
+@inject IVehicleServices _vehicleService
+@inject IFuelCardServices _fuelCardService
+@inject IFuelCardDriverServices _fuelCardDriverService
+@inject IDriverVehicleServices _driverVehicleService
+
+
+<PageTitle>Drivers</PageTitle>
+
+@if (_isLoading)
+{
+    <LoadingSpinner IsLoading="@_isLoading" />
+}
+
+<DialogContainer Visible="_showDeleteConfirmation">
+    <div class="modal d-flex justify-content-center align-items-center">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verwijderen</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Bent u zeker dat u de bestuurder wilt verwijderen?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => _showDeleteConfirmation = false">Neen</button>
+                    <button type="button" class="btn btn-primary" @onclick="async () => { await DeleteDriver(_selectedDriverDto); }">Ja</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</DialogContainer>
+
+
+@code {
+
+    private bool _isLoading = true;
+
+    private FuelCardListDto? _fuelCardListDto;
+    private VehicleListDto? _vehicleListDto;
+    private DriverListDto? _driverListDto;
+
+    private DriverDto _selectedDriverDto = new();
+    private List<FuelCardDriverDto> _fuelCardDriverDtos = new();
+    private List<FuelCardDto> _checkedfuelCard = new();
+    private List<VehicleDto> _checkedVehicle = new();
+    private List<DriverVehicleDto> _driverVehicleDtos = new();
+
+
+    private bool _isSortAscending = true;
+    private string _currentSortColumn = "date";
+    private int _pageSize = 5;
+    private int _pageNumber = 1;
+    private int _totalPages;
+
+    public string ErrorTitle { get; set; } = string.Empty;
+    public string ErrorMessage { get; set; } = string.Empty;
+
+    private bool _driverAdded = false;
+    private bool _driverUpdated = false;
+    private bool _driverDeleted = false;
+
+    private bool _selectedDriver = false;
+    private bool _addNewFuelCard = false;
+    private bool _showSendConfirmation = false;
+    private bool _showDeleteConfirmation = false;
+    private bool _error = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _fuelCardListDto = await _fuelCardService.GetAllFuelCardsAsync();
+        _vehicleListDto = await _vehicleService.GetAllVehicleAsync();
+
+        await LoadDriverListDto();
+        _isLoading = false;
+    }
+
+    private async Task LoadDriverListDto()
+    {
+        _driverListDto = await _driverService.GetAllDriversAsync(_currentSortColumn, _isSortAscending, _pageNumber, _pageSize);
+        _totalPages = (int)Math.Ceiling((double)_vehicleListDto.TotalItems / _pageSize);
+    }
+
+    private void AddNewDriver()
+    {
+        SetBoolDefault();
+
+        _selectedDriver = false;
+        _addNewFuelCard = true;
+    }
+
+    private void SetBoolDefault()
+    {
+        _showSendConfirmation = false;
+        _error = false;
+    }
+
+
+    private async Task SelectDriver(DriverDto selectedDriver)
+    {
+        _selectedDriverDto = selectedDriver;
+
+        _fuelCardDriverDtos = (await _fuelCardDriverService.GetDriverWithConnectedFuelCardsByDriverId(_selectedDriverDto.Id)).Item1;
+        var v = _fuelCardDriverDtos.Select(x => _fuelCardListDto.FuelCards.Where(r => x.FuelCardId == r.Id).ToList()).ToList();
+        _checkedfuelCard = v.SelectMany(x => x.Select(x => x).ToList()).ToList();
+
+        _driverVehicleDtos = (await _driverVehicleService.GetDriverWithConnectedVehiclesByDriverId(_selectedDriverDto.Id)).Item1;
+        var a = _driverVehicleDtos.Select(x => _vehicleListDto.VehicleDtos.Where(r => x.VehicleId == r.Id).ToList()).ToList();
+        _checkedVehicle = a.SelectMany(x => x.Select(x => x).ToList()).ToList();
+
+        _showSendConfirmation = false;
+        _selectedDriver = true;
+        _addNewFuelCard = false;
+        _driverAdded = false;
+        _driverUpdated = false;
+        _driverDeleted = false;
+    }
+
+    private async Task SaveNewUser(DriverDto driverDto)
+    {
+        try
+        {
+            if (driverDto is not null)
+            {
+                var (status, statusMessage) = await _driverService.AddFDriverAsync(driverDto);
+
+                var (statusRelatedFuelCards, statusMessageRelatedFuelCards) = await _fuelCardDriverService.UpdateDriverWithFuelCards(driverDto.Id, driverDto.FuelCardDtos.Select(x => x.Id).ToList());
+
+                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(driverDto.Id, driverDto.VehicleDtos.Select(x => x.Id)
+                                                                                                                                                                    .ToList());
+
+                if (!status || !statusRelatedFuelCards || !statusRelatedVehicles)
+                {
+                    ErrorTitle = " Oei, er ging iets verkeerd tijdens het toevoegen.";
+                    ErrorMessage = statusMessage;
+                    _error = true;
+                }
+                else
+                    _driverAdded = true;
+
+                _showSendConfirmation = true;
+                _driverListDto = await _driverService.GetAllDriversAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het toevoegen.";
+            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het toevoegen. Error: {ex.Message}";
+            _error = true;
+        }
+    }
+
+    private async Task DeleteDriver(DriverDto driverDto)
+    {
+        try
+        {
+            if (driverDto is not null)
+            {
+                await _driverService.DeleteDriverAsync(driverDto.Id);
+
+                _showSendConfirmation = true;
+                _driverDeleted = true;
+
+                _driverListDto = await _driverService.GetAllDriversAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+            _showDeleteConfirmation = false;
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het verwijderen";
+            ErrorMessage = "Excuses! Er ging iets verkeerd tijdens het verwijderen.";
+            _error = true;
+            _showDeleteConfirmation = false;
+        }
+    }
+
+    private async Task UpdateSelectedUser()
+    {
+        try
+        {
+            if (_selectedDriverDto is not null)
+            {
+                var updateFuelCard = await _driverService.UpdateDriverAsync(_selectedDriverDto);
+
+                var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _fuelCardDriverService.UpdateDriverWithFuelCards(_selectedDriverDto.Id, _checkedfuelCard.Select(x => x.Id)
+                                                                                                                                                                        .ToList());
+                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(_selectedDriverDto.Id, _checkedfuelCard.Select(x => x.Id)
+                                                                                                                                                                        .ToList());
+                if (!updateFuelCard || !statusRelatedDrivers)
+                {
+                    ErrorTitle = "Oei, er ging iets verkeerd tijdens het updaten.";
+                    ErrorMessage = statusMessageRelatedDrivers;
+                    _error = true;
+                }
+                else
+                {
+                    _driverDeleted = true;
+
+                    _showSendConfirmation = true;
+                    _driverListDto = await _driverService.GetAllDriversAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = "Oei, er ging iets mis tijdens het bewerken.";
+            ErrorMessage = $"Excuses! Er ging iets mis tijdens het bewerken. Error: {ex.Message}";
+            _error = true;
+        }
+    }
+
+    private void CheckFuelCardChanged(FuelCardDto fuelCardDto)
+    {
+        if (_checkedfuelCard.Contains(fuelCardDto))
+            _checkedfuelCard.Remove(fuelCardDto);
+        else
+            _checkedfuelCard.Add(fuelCardDto);
+    }
+
+    private void CheckVehicleChanged(VehicleDto vehicleDto)
+    {
+        if (_checkedVehicle.Contains(vehicleDto))
+            _checkedVehicle.Remove(vehicleDto);
+        else
+            _checkedVehicle.Add(vehicleDto);
+    }
+
+    private async Task SortTable(string columnName)
+    {
+        _isLoading = true;
+        if (_currentSortColumn == columnName)
+        {
+            _isSortAscending = !_isSortAscending;
+        }
+        else
+        {
+            _currentSortColumn = columnName;
+            _isSortAscending = true;
+        }
+
+        await LoadDriverListDto();
+
+        _isLoading = false;
+    }
+
+    private async Task HandlePageChanged(int page)
+    {
+        _pageNumber = page;
+        await LoadDriverListDto();
+    }
+
+    private async Task HandleItemsPerPageChanged(int itemsPerPage)
+    {
+        _pageSize = itemsPerPage;
+        await LoadDriverListDto();
+    }
+}

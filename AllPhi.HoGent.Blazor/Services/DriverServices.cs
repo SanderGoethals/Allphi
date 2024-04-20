@@ -37,5 +37,60 @@ namespace AllPhi.HoGent.Blazor.Services
             var driversDto = JsonConvert.DeserializeObject<DriverListDto>(responseContent);
             return driversDto ?? new DriverListDto();
         }
+
+        public async Task<(bool, string message)> AddFDriverAsync(DriverDto driverDto)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(driverDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/drivers/adddriver", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorResponse = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error adding driver: {errorResponse}");
+                    return (false, errorResponse);
+                }
+
+                return (true, "Added succesfully");
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> DeleteDriverAsync(Guid driverId)
+        {
+            var response = await _httpClient.DeleteAsync($"api/drivers/deletedriver/{driverId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error deleting driver: {errorResponse}");
+                return (false);
+            }
+
+            return true;
+        }
+
+        public async Task<bool> UpdateDriverAsync(DriverDto driverDto)
+        {
+            var json = JsonConvert.SerializeObject(driverDto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"api/drivers/updatedriver", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error updating driver: {errorResponse}");
+                return false;
+            }
+
+            return true;
+        }
     }
 }
