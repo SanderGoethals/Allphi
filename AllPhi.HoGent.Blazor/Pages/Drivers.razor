@@ -8,7 +8,8 @@
 @inject IDriverServices _driverService
 @inject IVehicleServices _vehicleService
 @inject IFuelCardServices _fuelCardService
-
+@inject IFuelCardDriverServices _fuelCardDriverService
+@inject IDriverVehicleServices _driverVehicleService
 
 
 <PageTitle>Drivers</PageTitle>
@@ -28,11 +29,22 @@
     private VehicleListDto? _vehicleListDto;
     private DriverListDto? _driverListDto;
 
+    private DriverDto _selectedDriverDto = new();
+    private List<FuelCardDriverDto> _fuelCardDriverDtos = new();
+    private List<FuelCardDto> _checkedfuelCard = new();
+    private List<VehicleDto> _checkedVehicle = new();
+    private List<DriverVehicleDto> _driverVehicleDtos = new();
+
+
     private bool _isSortAscending = true;
     private string _currentSortColumn = "date";
     private int _pageSize = 5;
     private int _pageNumber = 1;
     private int _totalPages;
+
+    private bool _driverAdded = false;
+    private bool _driverUpdated = false;
+    private bool _driverDeleted = false;
 
     private bool _selectedDriver = false;
     private bool _addNewFuelCard = false;
@@ -66,5 +78,26 @@
     {
         _showSendConfirmation = false;
         _error = false;
+    }
+
+
+    private async Task SelectDriver(DriverDto selectedDriver)
+    {
+        _selectedDriverDto = selectedDriver;
+
+        _fuelCardDriverDtos = (await _fuelCardDriverService.GetDriverWithConnectedFuelCardsByDriverId(_selectedDriverDto.Id)).Item1;
+        var v = _fuelCardDriverDtos.Select(x => _fuelCardListDto.FuelCards.Where(r => x.FuelCardId == r.Id).ToList()).ToList();
+        _checkedfuelCard = v.SelectMany(x => x.Select(x => x).ToList()).ToList();
+
+        _driverVehicleDtos = (await _driverVehicleService.GetDriverWithConnectedVehiclesByDriverId(_selectedDriverDto.Id)).Item1;
+        var a = _driverVehicleDtos.Select(x => _vehicleListDto.VehicleDtos.Where(r => x.VehicleId == r.Id).ToList()).ToList();
+        _checkedVehicle = a.SelectMany(x => x.Select(x => x).ToList()).ToList();
+
+        _showSendConfirmation = false;
+        _selectedDriver = true;
+        _addNewFuelCard = false;
+        _driverAdded = false;
+        _driverUpdated = false;
+        _driverDeleted = false;
     }
 }
