@@ -83,7 +83,14 @@
     private List<VehicleDto> _checkedVehicles = new();
     private List<FuelCardDto> _checkedFuelCards = new();
 
+    [Parameter]
     public EventCallback<DriverDto> OnSave { get; set; }
+
+    [Parameter]
+    public List<VehicleDto>? Vehicles { get; set; } = new();
+
+    [Parameter]
+    public List<FuelCardDto>? FuelCards { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
