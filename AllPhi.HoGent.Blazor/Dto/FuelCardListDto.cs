@@ -2,7 +2,7 @@
 {
     public class FuelCardListDto
     {
-        public List<FuelCardDto> FuelCardDtos { get; set; }
+        public List<FuelCardDto> FuelCards { get; set; }
         public int TotalItems { get; set; }
     }
 }
