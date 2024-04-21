@@ -69,6 +69,192 @@
             </div>
         }
     </div>
+
+    @if (currentStep == WizardStep.DriverDetails)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Voer de voornaam, achternaam en rijksregisternummer in om een nieuwe bestuurder toe te voegen.
+                Deze essentiële informatie is nodig om verder te gaan.
+                Klik op 'Volgende' na het invullen van de gegevens om de registratie voort te zetten.
+                <br />
+                <br />
+                Uw nauwkeurigheid zorgt voor een vlotte onboarding.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="firstname">Voornaam:</label>
+            <input class="form-input-select" type="text" name="firstname" @oninput="@((e) => OnInput(e, "firstname"))" id="firstname" @bind="SelectedFirstName" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="lastname">Achternaam:</label>
+            <input class="form-input-select" type="text" name="lastname" @oninput="@((e) => OnInput(e, "lastname"))" id="lastname" @bind="SelectedLastName" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="registernumber">Rijksregisternummer:</label>
+            <input class="form-input-select" type="number" name="registernumber" @oninput="@((e) => OnInput(e, "registernumber"))" id="registernumber" @bind="SelectedRegisternumber" />
+        </div>
+    }
+    else if (currentStep == WizardStep.DriverAdress)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Voer de adres gegevens correct in om een nieuwe bestuurder toe te voegen.
+                Deze essentiële informatie is nodig om verder te gaan.
+                Klik op 'Volgende' na het invullen van de gegevens om de registratie voort te zetten.
+                <br />
+                <br />
+                Uw nauwkeurigheid zorgt voor een vlotte onboarding.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="street">Straat:</label>
+            <input class="form-input-select" type="text" name="street" @oninput="@((e) => OnInput(e, "street"))" id="street" @bind="SelectedStreet" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="housenumber">Huisnummer:</label>
+            <input class="form-input-select" name="housenumber" @oninput="@((e) => OnInput(e, "housenumber"))" id="housenumber" @bind="SelectedHouseNumber" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="city">Gemeente:</label>
+            <input class="form-input-select" name="city" @oninput="@((e) => OnInput(e, "city"))" id="city" @bind="SelectedCity" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark form-titles" for="postalcode">Postcode:</label>
+            <input class="form-input-select" name="postalcode" @oninput="@((e) => OnInput(e, "postalcode"))" id="postalcode" @bind="SelectedPostalCode" />
+        </div>
+    }
+    else if (currentStep == WizardStep.Status)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Selecteer de gewenste status en de rijbewijs type voor de nieuwe bestuurder: 'Actief', of 'Niet actief' staat toe dat er getankt kan worden.
+                De gekozen status en de rijbewijs bepaalt de beschikbare functionaliteiten voor de bestuurder binnen ons systeem.
+                <br />
+                <br />
+                Kies zorgvuldig en ga verder met 'Volgende'.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex form-titles" for="driverlisence">Rijbewijs:</label>
+            <select class="form-input-select" id="driverlisence" @bind="TypeOfDriverLicense">
+                @foreach (var driverLicense in Enum.GetValues(typeof(TypeOfDriverLicense)))
+                {
+                    <option value="@driverLicense">@driverLicense</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex form-titles" for="status">Status:</label>
+            <select class="form-input-select" id="status" @bind="SelectedStatus">
+                <option selected value="@Status.Active">Actief</option>
+                <option value="@Status.Deactive">Niet actief</option>
+            </select>
+        </div>
+    }
+    else if (currentStep == WizardStep.Related)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Kies uit de beschikbare tankkaarten en wagens die aan uw bedrijf zijn gekoppeld.
+                Elke geselecteerde tankkaart en wagen zal door de nieuwe bestuurder beheerd worden.
+                U kunt meerdere tankkaarten en wagens selecteren om toegang te geven aan de nieuwe bestuurders.
+                <br />
+                <br />
+                Vink de relevante tankkaart, wagen aan en ga verder met 'Volgende' om de instellingen te bevestigen.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="form-titles">Gekoppelde tankkaarten:</label>
+            @foreach (var fuelCard in FuelCards)
+            {
+                <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedFuelCards.Contains(fuelCard) ? "tabel-row-selected" : "")"
+                     @onclick="(() => CheckFuelCardsChanged(fuelCard))">
+                    <label class="pointer-cursor">@fuelCard.CardNumber @fuelCard.Status</label>
+                    <input class="pointer-cursor" checked="@(_checkedFuelCards.Contains(fuelCard))" type="checkbox" />
+                </div>
+            }
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="form-titles">Gekoppelde wagens:</label>
+            @foreach (var vehicle in Vehicles)
+            {
+                <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedVehicles.Contains(vehicle) ? "tabel-row-selected" : "")"
+                     @onclick="(() => CheckVehiclesChanged(vehicle))">
+                    <label class="pointer-cursor">@vehicle.CarBrand @vehicle.LicensePlate</label>
+                    <input class="pointer-cursor" checked="@(_checkedVehicles.Contains(vehicle))" type="checkbox" />
+                </div>
+            }
+        </div>
+    }
+
+
+    else if (currentStep == WizardStep.Review)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                U bevindt zich nu in de laatste fase van het bestuurderstoevoegingsproces.
+                Gelieve zorgvuldig alle door u gemaakte keuzes en instellingen te herzien.
+                Controleer de informatie, adres, status, geselecteerde tankkaarten en wagens.
+                Na bevestiging zal de nieuwe bestuurder worden aangemaakt.
+                <br />
+                <br />
+                Druk op 'Opslaan' om te bevestigen.
+                U heeft altijd de mogelijkheid om later wijzigingen aan te brengen en de instellingen van de gebruiker bij te werken.
+            </p>
+        </div>
+        <div class="col-md-6 mb-3">
+            <p class="review">Voornaam: <span>@SelectedFirstName</span></p>
+            <p class="review">Achternaam: <span>@SelectedLastName</span></p>
+            <p class="review">Rijksregisternummer: <span>@SelectedRegisternumber</span></p>
+            <p class="review">Status: <span>@SelectedStatus</span></p>
+            <p class="review">Straat: <span>@SelectedStreet</span></p>
+            <p class="review">Huisnummer: <span>@SelectedHouseNumber</span></p>
+            <p class="review">Gemeente: <span>@SelectedCity</span></p>
+            <p class="review">Postcode: <span>@SelectedPostalCode</span></p>
+            <p class="review">Rijbewijs: <span>@TypeOfDriverLicense</span></p>
+        </div>
+        <div class="col-md-6 mb-3">
+            <p class="review">Geselecteerde tankkaarten:</p>
+            @foreach (var fuelcard in _checkedFuelCards)
+            {
+                <p class="review">- <span>@fuelcard.CardNumber @fuelcard.Pin</span></p>
+            }
+
+        </div>
+        <div class="col-md-6 mb-3">
+            <p class="review">Geselecteerde wagens:</p>
+            @foreach (var vehicle in _checkedVehicles)
+            {
+                <p class="review">- <span>@vehicle.CarBrand @vehicle.LicensePlate</span></p>
+            }
+
+        </div>
+    }
+</div>
+
+<div class="d-flex m-2">
+    @if (currentStep != WizardStep.Related)
+    {
+        <button type="button" class="btn buttons-succes m-2" @onclick="GoToPreviousStep">Vorige</button>
+    }
+
+    @if (currentStep != WizardStep.Review)
+    {
+        @if (!_readyForNext)
+        {
+            <button type="button" disabled class="btn btn-disabled  m-2">Volgende</button>
+        }
+        else
+        {
+            <button type="button" class="btn buttons-succes m-2" @onclick="GoToNextStep">Volgende</button>
+        }
+    }
+
+    else
+    {
+        <button type="button" class="btn buttons-succes m-2" @onclick="HandleSave">Opslaan</button>
+    }
 </div>
 
 @code {
