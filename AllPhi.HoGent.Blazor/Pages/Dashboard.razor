@@ -81,8 +81,10 @@ else
 
     private PieConfig GetChartConfig(string label, int[] data, string[] backgroundColors)
     {
-        var config = new PieConfig
+        var config = new PieConfig(true)
             {
+                
+                
                 Options = new PieOptions
                 {
                     Responsive = true,
