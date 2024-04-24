@@ -1,5 +1,7 @@
 ﻿@using AllPhi.HoGent.Blazor.Dto
 @using AllPhi.HoGent.Blazor.Dto.Enums
+@using AllPhi.HoGent.Blazor.Extensions
+@inject HttpClient _http
 
 <style>
     .review {
@@ -109,7 +111,17 @@
         </div>
         <div class="col-md-12 mb-3">
             <label class="d-flex required-field-mark form-titles" for="street">Straat:</label>
-            <input class="form-input-select" type="text" name="street" @oninput="@((e) => OnInput(e, "street"))" id="street" @bind="SelectedStreet" />
+            <input class="form-input-select" type="text" name="street" @oninput="OnInputStreet" id="street" @bind="SelectedStreet" />
+            @if (AddressSuggestions.Any())
+            {
+                <select>
+                    @foreach (var address in AddressSuggestions)
+                    {
+                        <option value="@address.Thoroughfarename">@address.Thoroughfarename @address.Zipcode @address.Municipality</option>
+                        @*<li @onclick="() => SelectAddress(address.Thoroughfarename.ToString())">@address.Thoroughfarename</li>*@
+                    }
+                </select>
+            }
         </div>
         <div class="col-md-12 mb-3">
             <label class="d-flex required-field-mark form-titles" for="housenumber">Huisnummer:</label>
@@ -258,6 +270,7 @@
 </div>
 
 @code {
+    private List<LocationModel.LocationResult> AddressSuggestions = new();
 
     public enum WizardStep
     {
@@ -303,20 +316,20 @@
     private async Task HandleSave()
     {
         var driver = new DriverDto
-            {
-                Id = Guid.NewGuid(),
-                FirstName = SelectedFirstName,
-                LastName = SelectedLastName,
-                RegisterNumber = SelectedRegisternumber,
-                Street = SelectedStreet,
-                HouseNumber = SelectedHouseNumber,
-                City = SelectedCity,
-                PostalCode = SelectedPostalCode,
-                Status = SelectedStatus,
-                FuelCardDtos = _checkedFuelCards,
-                TypeOfDriverLicense = TypeOfDriverLicense,
-                VehicleDtos = _checkedVehicles
-            };
+        {
+            Id = Guid.NewGuid(),
+            FirstName = SelectedFirstName,
+            LastName = SelectedLastName,
+            RegisterNumber = SelectedRegisternumber,
+            Street = SelectedStreet,
+            HouseNumber = SelectedHouseNumber,
+            City = SelectedCity,
+            PostalCode = SelectedPostalCode,
+            Status = SelectedStatus,
+            FuelCardDtos = _checkedFuelCards,
+            TypeOfDriverLicense = TypeOfDriverLicense,
+            VehicleDtos = _checkedVehicles
+        };
         await OnSave.InvokeAsync(driver);
     }
 
@@ -326,7 +339,7 @@
         {
             if (string.IsNullOrEmpty(SelectedFirstName) ||
                 string.IsNullOrEmpty(SelectedLastName) ||
-                string.IsNullOrEmpty(SelectedRegisternumber.ToString()))
+                SelectedRegisternumber == null)
                 _readyForNext = false;
             else
                 _readyForNext = true;
@@ -420,5 +433,51 @@
         {
             GoToStep(step);
         }
+    }
+
+
+
+    private async Task FetchAddressSuggestions(string street)
+    {
+        var response = await _http.GetAsync($"https://geo.api.vlaanderen.be/geolocation/Location?q={Uri.EscapeDataString(street)}&c=5"); // c=5 beperkt het aantal suggesties tot 5
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            try
+            {
+                var data = JsonConvert.DeserializeObject<LocationModel.Root>(jsonResponse);
+                if (data != null)
+                {
+                    AddressSuggestions = data.LocationResult;
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine("JSON Parsing Error: " + ex.Message);
+                // Mogelijk moet je hier meer robuuste error handling implementeren
+            }
+        }
+    }
+
+    public class LocationSuggestion
+    {
+        public string FormattedAddress { get; set; }
+    }
+
+
+    private async Task OnInputStreet(ChangeEventArgs e)
+    {
+        SelectedStreet = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(SelectedStreet))
+        {
+            await FetchAddressSuggestions(SelectedStreet);
+        }
+    }
+
+    private void SelectAddress(string address)
+    {
+        SelectedStreet = address; // Stel de geselecteerde straat in
+                                  // Mogelijk moet je hier andere velden aanpassen
+        AddressSuggestions.Clear(); // Maak de lijst met suggesties leeg
     }
 }
