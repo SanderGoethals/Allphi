@@ -1,6 +1,10 @@
 ﻿@using AllPhi.HoGent.Blazor.Dto
 @using AllPhi.HoGent.Blazor.Dto.Enums
 
+@using Newtonsoft.Json
+@inject HttpClient _http
+@inject IJSRuntime JSRuntime
+
 <style>
     .review {
         font-weight: bolder;
