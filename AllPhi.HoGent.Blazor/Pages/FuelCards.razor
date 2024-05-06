@@ -1,5 +1,6 @@
 ﻿@page "/fuelcards"
 
+@using AllPhi.HoGent.Blazor.Dto.Enums
 @using AllPhi.HoGent.Blazor.Services
 @using AllPhi.HoGent.Blazor.Dto
 @using AllPhi.HoGent.Blazor.Components
@@ -17,6 +18,7 @@
 {
     <LoadingSpinner IsLoading="@_isLoading" />
 }
+
 
 <DialogContainer Visible="_showDeleteConfirmation">
     <div class="modal d-flex justify-content-center align-items-center">
@@ -198,6 +200,33 @@
             _error = true;
             _showDeleteConfirmation = false;
         }
+    }
+    private void CheckDriverChanged(DriverDto driverDto)
+    {
+        if (_checkedDriver.Contains(driverDto))
+            _checkedDriver.Remove(driverDto);
+        else
+            _checkedDriver.Add(driverDto);
+    }
+
+    private void CheckFuelTypeChanged(FuelType fuelType)
+    {
+        if (_selectedFuelCardDto.FuelCardFuelTypesDto.Select(x => x.FuelType).Any(x => x == fuelType))
+        {
+            var existingFuelCardType = _selectedFuelCardDto.FuelCardFuelTypesDto.FirstOrDefault(x => x.FuelType == fuelType);
+            _selectedFuelCardDto.FuelCardFuelTypesDto.Remove(existingFuelCardType);
+        }
+        else
+        {
+            _selectedFuelCardDto.FuelCardFuelTypesDto.Add(new FuelCardFuelTypeDto
+                {
+                    Id = Guid.NewGuid(),
+                    FuelCardId = _selectedFuelCardDto.Id,
+                    FuelType = fuelType
+                });
+        }
+
+        InvokeAsync(StateHasChanged);
     }
 }
 
