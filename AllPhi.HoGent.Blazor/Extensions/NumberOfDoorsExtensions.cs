@@ -6,7 +6,7 @@ namespace AllPhi.HoGent.Blazor.Extansions
     {
         private static readonly Dictionary<NumberOfDoors, string> _doorNames = new Dictionary<NumberOfDoors, string>
         {
-            { NumberOfDoors.OneDoor, "1 deur" },
+            
             { NumberOfDoors.TwooDoors, "2 deuren" },
             { NumberOfDoors.ThreeDoors, "3 deuren" },
             { NumberOfDoors.FourDoors, "4 deuren" },
