@@ -17,14 +17,71 @@
 @using ChartJs.Blazor.Interop
 
 
-
-
-
 @inject IDriverServices _driverService
 @inject IVehicleServices _vehicleService
 @inject IFuelCardServices _fuelCardService
 @inject IFuelCardDriverServices _fuelCardDriverService
 @inject IDriverVehicleServices _driverVehicleService
+
+
+
+<style>
+    .chart-width {
+        width:30%;
+        margin: 5px;
+    }
+
+    @@media (max-width: 1550px) {
+        .chart-width {
+            width: 30%;
+            margin: 5px;
+        }
+
+        h4 {
+            min-height: 50px;
+        }
+
+        th {
+        }
+    }
+
+    @@media (max-width: 1115px) {
+        .chart-width {
+            width: 30%;
+            margin: 5px;
+        }
+
+        h4 {
+            font-size: 15px !important;
+            min-height: 63px;
+        }
+
+        th {
+            font-size: 9px !important;
+        }
+
+        td {
+            font-size: 12px !important;
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .chart-width {
+            width: 100%;
+            margin: 0px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        h4 {
+            font-size: 12px;
+        }
+
+        th {
+            font-size: 10px !important;
+        }
+    }
+</style>
 
 <PageTitle>Dashboard</PageTitle>
 @if (_isLoading)
@@ -38,8 +95,8 @@ else
             <h3 class="block-title">Dashboard Analytics</h3>
         </div>
         <div class="block-content space-y-4">
-            <div class="row">
-                <div class="col-md-3 card mx-5 p-2">
+            <div class="row d-flex justify-content-around">
+                <div class="chart-width card p-2">
                     <h4>Bestuurders</h4>
                     <p>Total : @_driverListDto.TotalItems</p>
 
@@ -48,14 +105,14 @@ else
                     
 
                 </div>
-                <div class="col-md-3 card mx-5 p-2    ">
+                <div class="chart-width card p-2    ">
                     <h4>Voertuigen</h4>
                     <p>Total : @_vehicleListDto.TotalItems</p>
 
                     <Chart Config="@_vehiclesChartConfig" Width="15" Height="15" />
 
                 </div>
-                <div class="col-md-3 card mx-5 p-2  ">
+                <div class="chart-width card p-2  ">
                     <h4>Tankkaarten</h4>
                     <p>Total : @_fuelCardListDto.TotalItems</p>
 
@@ -63,8 +120,8 @@ else
 
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-3 card mx-5 p-2 table-responsive   ">
+            <div class="row d-flex justify-content-around">
+                <div class="chart-width card p-2 table-responsive   ">
                     <h4>Verjaardagen</h4>
                     <table class="table">
                         <thead>
@@ -88,7 +145,7 @@ else
                     </table>
 
                 </div>
-                <div class="col-md-3 card mx-5 p-2 table-responsive   ">
+                <div class="chart-width card p-2 table-responsive   ">
                     <h4>Voertuigen met naderende Keuringsdatum</h4>
                     <table class="table">
                         <thead>
@@ -112,7 +169,7 @@ else
                     </table>
 
                 </div>
-                <div class="col-md-3 card mx-5 p-2 table-responsive  ">
+                <div class="chart-width card p-2 table-responsive  ">
                     <h4>Tankkaarten met naderende vervaldag</h4>
                     <table class="table">
                         <thead>
@@ -138,8 +195,8 @@ else
 
             </div>
 
-            <div class="row">
-                <div class="col-md-3 card mx-5 p-2 table-responsive  ">
+            <div class="row d-flex justify-content-around">
+                <div class="chart-width card p-2 table-responsive  ">
                     <h4>Laatst toegevoegde Bestuurders</h4>
                     <table class="table">
                         <thead>
@@ -163,7 +220,7 @@ else
                     </table>
 
                 </div>
-                <div class="col-md-3 card mx-5 p-2 table-responsive  ">
+                <div class="chart-width card p-2 table-responsive  ">
                     <h4>Laatst toegevoegde Voertuigen</h4>
                     <table class="table">
                         <thead>
@@ -187,7 +244,7 @@ else
                     </table>
 
                 </div>
-                <div class="col-md-3 card mx-5 p-2 table-responsive  ">
+                <div class="chart-width card p-2 table-responsive  ">
                     <h4>Laatst toegevoegde Tankkaarten</h4>
                     <table class="table">
                         <thead>

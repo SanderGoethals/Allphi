@@ -33,8 +33,8 @@ namespace AllPhi.HoGent.Datalake.Data.Store
 
             IQueryable<FuelCard> sortedFuelCards = sortBy switch
             {
-                "id" => isAscending ? fuelCardsQuery.OrderBy(x => x.Id) : fuelCardsQuery.OrderByDescending(x => x.Id),
-                "cardNumber" => isAscending ? fuelCardsQuery.OrderBy(x => x.CardNumber) : fuelCardsQuery.OrderByDescending(x => x.CardNumber),
+                "status" => isAscending ? fuelCardsQuery.OrderBy(x => x.Status) : fuelCardsQuery.OrderByDescending(x => x.Status),
+                "cardnumber" => isAscending ? fuelCardsQuery.OrderBy(x => x.CardNumber) : fuelCardsQuery.OrderByDescending(x => x.CardNumber),
                 "pin" => isAscending ? fuelCardsQuery.OrderBy(x => x.Pin) : fuelCardsQuery.OrderByDescending(x => x.Pin),
                 "validityDate" => isAscending ? fuelCardsQuery.OrderBy(x => x.ValidityDate) : fuelCardsQuery.OrderByDescending(x => x.ValidityDate),
                 _ => fuelCardsQuery

@@ -37,16 +37,16 @@ namespace AllPhi.HoGent.RestApi.Controllers
             return Ok(driverVehicleListDtos);
         }
 
-        //[HttpGet("getdriverwithvehiclesbydriverid/{driverId}")]
-        //public async Task<ActionResult<DriverVehicleListDto>> GetDriverWithVehiclesByDriverId(Guid driverId)
-        //{
-        //    var driverVehicles = await _driverVehicleStore.GetDriverWithConnectedVehicleByDriverId(driverId);
-        //    if (driverVehicles == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return Ok(MapToDriverVehicleListDto(driverVehicles, driverVehicles.Count));
-        //}
+        [HttpGet("getdriverwithvehiclesbydriverid/{driverId}")]
+        public async Task<ActionResult<DriverVehicleListDto>> GetDriverWithVehiclesByDriverId(Guid driverId)
+        {
+            var driverVehicles = await _driverVehicleStore.GetDriverWithConnectedVehicleByDriverId(driverId);
+            if (driverVehicles == null)
+            {
+                return NotFound();
+            }
+            return Ok(MapToDriverVehicleListDto(driverVehicles));
+        }
 
         [HttpGet("getvehiclewithdrivers/{vehicleId}")]
         public async Task<ActionResult<DriverVehicleListDto>> GetVehicleWithDriversByVehicleId(Guid vehicleId)

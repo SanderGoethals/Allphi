@@ -3,6 +3,7 @@
 @using AllPhi.HoGent.Blazor.Dto.Enums
 @using AllPhi.HoGent.Blazor.Services
 @using AllPhi.HoGent.Blazor.Dto
+@using AllPhi.HoGent.Datalake.Data.Helpers
 @using AllPhi.HoGent.Blazor.Components
 
 @inject IFuelCardServices _fuelCardService
@@ -10,6 +11,35 @@
 @inject IVehicleServices _vehicleService
 @inject IFuelCardDriverServices _fuelCardDriverService
 @inject IDriverVehicleServices _driverVehicleService
+
+<style>
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .main-table {
+        width: inherit;
+    }
+
+    .update-table {
+        /*padding-top: 100px;*/
+    }
+
+
+    .scrollable-driver-list {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .tabel-row-design:hover {
+        background-color: rgba(33,150,243,0.058823529411764705) !important;
+    }
+
+    table tbody .eentest :hover {
+        background-color: rgba(33,150,243,0.058823529411764705) !important;
+    }
+</style>
 
 <PageTitle>FuelCards</PageTitle>
 
@@ -21,51 +51,68 @@
 else
 {
     <div class="row mb-5">
-        <div class="d-flex flex-wrap">
+        <div class="">
             <div class="main-table">
-                <div class="d-flex justify-content-between p-1 mb-5 flex-column">
-                    <h3>Tankkaarten</h3>
+                <div class="d-flex justify-content-between p-2 flex-column">
                     <div class="d-flex button-mobile-ui">
-                        <button type="button" class="btn buttons-succes m-2" @onclick="AddNewFuelCard">Tankkaart toevoegen</button>
+                        @if (_showAllFuelCards)
+                        {
+                            <button type="button" class="btn buttons-succes m-2" @onclick="AddNewFuelCard">Tankkaart toevoegen</button>
+                            <input />
+                        }
+                        else if (!_showAllFuelCards)
+                        {
+                            <button type="button" class="btn buttons-succes m-2" @onclick="ShowAllFuelcards">Toon alle tankkaarten</button>
+                        }
                     </div>
                 </div>
 
-                <div class="table-responsive ">
-                    <table class="table tabel-design">
-                        <thead>
-                            <tr>
-                                <th style="width:0px;"></th>
-                                <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("date")'>Vervaldag <span class="fa fa-sort"></span></th>
-                                <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("cardnumber")'>Kaart nummer <span class="fa fa-sort"></span></th>
-                                <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("pin")'>Pin <span class="fa fa-sort"></span></th>
-                                <th class="tabel-row-design pointer-cursor" data-sort="status" @onclick='()=>SortTable("status")'>Status <span class="fa fa-sort"></span></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var fuelCard in _fuelCardListDto.FuelCardDtos)
-                            {
-                                <tr class="pointer-cursor tabel-row-design @((fuelCard == _selectedFuelCardDto) ? "tabel-row-selected" : "")" @onclick="(async () => await SelectFuelCard(fuelCard))">
-                                    <td class="align-middle border-start"><span class="fas fa-gas-pump"></span></td>
-                                    <td class="align-middle">@fuelCard.ValidityDate.ToString("dd-MM-yyyy")</td>
-                                    <td class="align-middle">@fuelCard.CardNumber</td>
-                                    <td class="align-middle">@fuelCard.Pin</td>
-                                    <td class="align-middle border-end">@fuelCard.Status</td>
+                @if (_showAllFuelCards)
+                {
+                    <div class="table-responsive ">
+                        <table class="table table-hover" style="margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th style="width:0px;"></th>
+                                    <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("validityDate")'>Vervaldag <span class="fa fa-sort"></span></th>
+                                    <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("cardnumber")'>Kaart nummer <span class="fa fa-sort"></span></th>
+                                    <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("pin")'>Pin <span class="fa fa-sort"></span></th>
+                                    <th class="tabel-row-design pointer-cursor" @onclick='()=>SortTable("status")'>Status <span class="fa fa-sort"></span></th>
+                                    <th></th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                <div class="row">
-                    <PaginationComponent CurrentPage="@_pageNumber"
-                                         TotalPages="@_totalPages"
-                                         ItemsPerPage="@_pageSize"
-                                         OnPageChanged="HandlePageChanged"
-                                         OnItemsPerPageChanged="HandleItemsPerPageChanged" />
+                            </thead>
+                            <tbody>
+                                @if (_fuelCardListDto != null && _fuelCardListDto.FuelCardDtos.Any())
+                                {
+                                    @foreach (var fuelCard in _fuelCardListDto.FuelCardDtos)
+                                    {
+                                        <tr class="pointer-cursor">
+                                            <td class="align-middle border-start" @onclick="(async () => await SelectFuelCard(fuelCard))"><span class="fas fa-gas-pump"></span></td>
+                                            <td @onclick="(async () => await SelectFuelCard(fuelCard))">@fuelCard.ValidityDate.ToString("dd-MM-yyyy")</td>
+                                            <td @onclick="(async () => await SelectFuelCard(fuelCard))">@fuelCard.CardNumber</td>
+                                            <td @onclick="(async () => await SelectFuelCard(fuelCard))">@fuelCard.Pin</td>
+                                            <td @onclick="(async () => await SelectFuelCard(fuelCard))">@fuelCard.Status</td>
+                                            <td @onclick="(() => SelectAndShowDelete(fuelCard))">
+                                                <span type="button" class="fa fa-trash-can" @onclick="() => _showDeleteConfirmation = true" style="color: #cf5256"></span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <PaginationComponent CurrentPage="@_pageNumber"
+                                             TotalPages="@_totalPages"
+                                             ItemsPerPage="@_pageSize"
+                                             OnPageChanged="HandlePageChanged"
+                                             OnItemsPerPageChanged="HandleItemsPerPageChanged" />
 
-                </div>
+                    </div>
+                }
             </div>
 
-            @if (_showSendConfirmation)
+            @if (_showSendConfirmation && !_showAllFuelCards)
             {
                 <div class="main-table">
                     @if (_fuelCardAdded)
@@ -156,15 +203,15 @@ else
                 @if (_addNewFuelCard)
                 {
                     <div class="wizard-table usermanagement-table-size">
-                        <div class="d-flex justify-content-between p-1 mb-5 flex-column">
+                        <div class="d-flex justify-content-between p-1">
                             <h3>Nieuwe tankkaart</h3>
                         </div>
 
-                        <div class="usermanagement-table-responsive border p-1 d-flex justify-content-around">
+                        <div class="usermanagement-table-responsive border p-1 d-flex justify-content-around" style="background-color:white;">
                             <div class="d-flex justify-content-around flex-wrap">
                                 <div class="row w-100">
                                     <div class="col-md-12" style="">
-                                        <FuelCardsWizardForm OnSave="@((x) => SaveNewUser(x))" Drivers="@_driverListDto.DriverDtos" />
+                                        <FuelCardsWizardForm OnSave="@((x) => SaveNewUser(x))" Drivers="@_driverListDto?.DriverDtos" />
                                     </div>
                                 </div>
                             </div>
@@ -174,15 +221,15 @@ else
                 else if (_selectedFuelCard)
                 {
                     <div class="update-table">
-                        <div class="d-flex justify-content-between p-1 mb-5 flex-column">
+                        <div class="d-flex justify-content-between p-1 flex-column">
                             <h3>Geselecteerde tankkaart</h3>
                             <div class="d-flex button-mobile-ui">
                                 <button type="submit" class="btn buttons-succes m-2" form="fuelcard-form">Tankkaart opslaan</button>
-                                <button type="button" class="btn buttons-danger m-2" @onclick="() => _showDeleteConfirmation = true">Tankkaart verwijderen</button>
+                                @*<button type="button" class="btn buttons-danger m-2" @onclick="() => _showDeleteConfirmation = true">Tankkaart verwijderen</button>*@
                             </div>
                         </div>
 
-                        <div class="form-border p-1">
+                        <div class="p-1" style="background-color: white;">
                             <form class="d-flex justify-content-around flex-wrap" id="fuelcard-form" @onsubmit="@UpdateSelectedUser">
                                 <div class="row w-100">
                                     <div class="col-md-6 mb-3">
@@ -204,7 +251,7 @@ else
                                     <div class="col-md-6 mb-3">
                                         <label class="d-flex form-titles" for="status">Status:</label>
                                         <select class="form-input-select" id="status" @bind="@_selectedFuelCardDto.Status">
-                                            @foreach (var role in Enum.GetValues(typeof(Status)))
+                                            @foreach (var role in Enum.GetValues(typeof(Status)).Cast<Status>().OrderBy(x => x.ToString()))
                                             {
                                                 <option value="@role">@(((Status)role))</option>
                                             }
@@ -230,14 +277,28 @@ else
 
                                         }
                                     </div>
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-titles">Gekoppelde Drivers:</label>
-                                        @foreach (var driver in _driverListDto.DriverDtos)
+                                    <div class="col-md-12 mb-3 d-flex flex-wrap">
+                                        <label class="col-md-3 form-titles">Gekoppelde bestuurders:</label>
+                                        <div class="col-md-3" style="margin-right:15px; margin-bottom:5px;">
+                                            <input class="w-100" type="text" placeholder="Zoek bestuurder op naam" @bind="_searchNameTerm" @oninput="OnChangeName" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input class="w-100" type="number" placeholder="Zoek bestuurder rijksregister" @bind="_searchRegisterNumberTerm" @oninput="OnChangeRegister" />
+                                        </div>
+                                        @if (_filteredListDriverDto != null && _filteredListDriverDto.Any())
                                         {
-                                            <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? "tabel-row-selected" : "")"
-                                                 @onclick="@(() => CheckDriverChanged(driver))">
-                                                <label class="pointer-cursor">@driver.FirstName @driver.LastName</label>
-                                                <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" />
+                                            <div class="col-12 scrollable-driver-list mt-1">
+                                                @foreach (var driver in _filteredListDriverDto.OrderBy(x => x.FirstName))
+                                                {
+                                                    <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? " tabel-row-selected" : "" )"
+                                                         @onclick="@(() => CheckDriverChanged(driver))">
+                                                        <div class="d-flex col-6">
+                                                            <label class="pointer-cursor col-4" style="min-width: 154px;">@driver.FirstName @driver.LastName</label>
+                                                            <label class="pointer-cursor col-4">@driver.RegisterNumber</label>
+                                                        </div>
+                                                        <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" style="margin-right: 40px; " />
+                                                    </div>
+                                                }
                                             </div>
                                         }
                                     </div>
@@ -280,16 +341,14 @@ else
 </DialogContainer>
 
 @code {
-    private bool _isLoading = true;
-
     private DriverListDto? _driverListDto;
     private FuelCardListDto? _fuelCardListDto;
 
-    private int _pageNumber = 1;
-    private int _pageSize = 5;
-    private int _totalPages;
-    private bool _isSortAscending = false;
-    private string _currentSortColumn = "date";
+    private FuelCardDto _selectedFuelCardDto = new();
+    private List<DriverDto> _checkedDriver = new();
+    private List<FuelCardDriverDto> _fuelCardDriverDtos = new();
+
+    private IEnumerable<DriverDto> _filteredListDriverDto;
 
     private bool _addNewFuelCard = false;
     private bool _selectedFuelCard = false;
@@ -300,14 +359,22 @@ else
     private bool _showDeleteConfirmation = false;
     private bool _fuelCardAdded = false;
     private bool _error = false;
-
-    private FuelCardDto _selectedFuelCardDto = new();
-    private List<DriverDto> _checkedDriver = new();
-    private List<FuelCardDriverDto> _fuelCardDriverDtos = new();
+    private bool _showAllFuelCards = true;
 
     public string ErrorTitle { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
 
+    private string _searchNameTerm = string.Empty;
+    private string _searchRegisterNumberTerm = string.Empty;
+    private int _currentFilterVersion = 0;
+    private const int FilterDelay = 700;
+
+    private bool _isSortAscending = false;
+    private string _currentSortColumn = "date";
+    private int _pageSize = 5;
+    private int _pageNumber = 1;
+    private int _totalPages;
+    private bool _isLoading = true;
 
 
     protected override async Task OnInitializedAsync()
@@ -319,7 +386,8 @@ else
 
     private async Task LoadFuelCardListDto()
     {
-        _fuelCardListDto = await _fuelCardService.GetAllFuelCardsAsync(_currentSortColumn, _isSortAscending, _pageNumber, _pageSize);
+        Pagination pagination = new Pagination(_pageNumber, _pageSize);
+        _fuelCardListDto = await _fuelCardService.GetAllFuelCardsAsync(_currentSortColumn, _isSortAscending, pagination);
         _totalPages = (int)Math.Ceiling((double)_fuelCardListDto.TotalItems / _pageSize);
     }
 
@@ -329,18 +397,28 @@ else
 
         _selectedFuelCard = false;
         _addNewFuelCard = true;
+        _showAllFuelCards = false;
     }
 
     private void SetBoolDefault()
     {
         _showSendConfirmation = false;
-        _fuelCardAdded = false;
         _error = false;
+    }
+
+    private async Task SelectAndShowDelete(FuelCardDto fuelCardDto)
+    {
+        await SelectFuelCard(fuelCardDto);
+        ShowAllFuelcards();
+        _showDeleteConfirmation = true;
+
     }
 
 
     private async Task SelectFuelCard(FuelCardDto selectedCard)
     {
+        _isLoading = true;
+
         _selectedFuelCardDto = selectedCard;
         _fuelCardDriverDtos = (await _fuelCardDriverService.GetFuelCardWithConnectedDriversByFuelCardId(_selectedFuelCardDto.Id)).Item1;
         var v = _fuelCardDriverDtos.Select(x => _driverListDto.DriverDtos.Where(r => x.DriverId == r.Id).ToList()).ToList();
@@ -351,12 +429,18 @@ else
         _fuelCardAdded = false;
         _fuelCardUpdated = false;
         _fuelCardDeleted = false;
-        _error = false;
+        _showAllFuelCards = false;
+
+        _filteredListDriverDto = _driverListDto?.DriverDtos ?? new();
+
+        _isLoading = false;
     }
 
 
     private async Task SaveNewUser(FuelCardDto fuelCardDto)
     {
+        _isLoading = true;
+
         try
         {
             if (fuelCardDto is not null)
@@ -385,40 +469,14 @@ else
             ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het toevoegen. Error: {ex.Message}";
             _error = true;
         }
+
+        _isLoading = false;
     }
 
-    private async Task UpdateSelectedUser()
-    {
-        try
-        {
-            if (_selectedFuelCardDto is not null)
-            {
-                var updatedFuelCard = await _fuelCardService.UpdateFuelCardAsync(_selectedFuelCardDto);
-
-                var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _fuelCardDriverService.UpdateFuelCardDriverAsync(_selectedFuelCardDto.Id, _checkedDriver.Select(x => x.Id).ToList());
-
-                if (!updatedFuelCard || !statusRelatedDrivers)
-                {
-                    ErrorTitle = " Oei, er ging iets verkeerd tijdens het updaten.";
-                    ErrorMessage = statusMessageRelatedDrivers;
-                    _error = true;
-                }
-                else
-                    _fuelCardUpdated = true;
-
-                _showSendConfirmation = true;
-                await LoadFuelCardListDto();
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorTitle = " Oei, er ging iets verkeerd tijdens het bijwerken";
-            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het bijwerken. Error: {ex.Message}";
-            _error = true;
-        }
-    }
     private async Task DeleteFuelCard(FuelCardDto fuelCardDto)
     {
+        _isLoading = true;
+
         try
         {
             if (fuelCardDto is not null)
@@ -440,7 +498,44 @@ else
             _error = true;
             _showDeleteConfirmation = false;
         }
+
+        _isLoading = false;
     }
+
+    private async Task UpdateSelectedUser()
+    {
+        _isLoading = true;
+
+        try
+        {
+            if (_selectedFuelCardDto is not null)
+            {
+                var updatedFuelCard = await _fuelCardService.UpdateFuelCardAsync(_selectedFuelCardDto);
+                var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _fuelCardDriverService.UpdateFuelCardDriverAsync(_selectedFuelCardDto.Id, _checkedDriver.Select(x => x.Id).ToList());
+
+                if (!updatedFuelCard || !statusRelatedDrivers)
+                {
+                    ErrorTitle = " Oei, er ging iets verkeerd tijdens het updaten.";
+                    ErrorMessage = statusMessageRelatedDrivers;
+                    _error = true;
+                }
+                else
+                    _fuelCardUpdated = true;
+
+                _showSendConfirmation = true;
+                await LoadFuelCardListDto();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorTitle = " Oei, er ging iets verkeerd tijdens het bijwerken";
+            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het bijwerken. Error: {ex.Message}";
+            _error = true;
+        }
+
+        _isLoading = false;
+    }
+
     private void CheckDriverChanged(DriverDto driverDto)
     {
         if (_checkedDriver.Contains(driverDto))
@@ -459,11 +554,11 @@ else
         else
         {
             _selectedFuelCardDto.FuelCardFuelTypesDto.Add(new FuelCardFuelTypeDto
-                {
-                    Id = Guid.NewGuid(),
-                    FuelCardId = _selectedFuelCardDto.Id,
-                    FuelType = fuelType
-                });
+            {
+                Id = Guid.NewGuid(),
+                FuelCardId = _selectedFuelCardDto.Id,
+                FuelType = fuelType
+            });
         }
 
         InvokeAsync(StateHasChanged);
@@ -497,6 +592,50 @@ else
     {
         _pageSize = itemsPerPage;
         await LoadFuelCardListDto();
+    }
+
+    private void ShowAllFuelcards()
+    {
+        _showAllFuelCards = true;
+        _addNewFuelCard = false;
+        _selectedFuelCard = false;
+    }
+
+    // <====================================================>
+    // <====================== SEARCH ======================>
+    // <====================================================>
+    private async Task OnChangeName(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchNameTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var naam = _driverListDto?.DriverDtos.Where(x => x.FirstName.ToLower().Contains(_searchNameTerm.ToLower())).ToList();
+            if (naam != null && naam.Any())
+                _filteredListDriverDto = naam;
+            else
+                _filteredListDriverDto = _driverListDto?.DriverDtos ?? new();
+        }
+    }
+
+    private async Task OnChangeRegister(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchRegisterNumberTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var registerNumber = _driverListDto?.DriverDtos.Where(x => x.RegisterNumber.Contains(_searchRegisterNumberTerm)).ToList();
+            if (registerNumber != null && registerNumber.Any())
+                _filteredListDriverDto = registerNumber;
+            else
+                _filteredListDriverDto = _driverListDto?.DriverDtos ?? new();
+        }
     }
 }
 

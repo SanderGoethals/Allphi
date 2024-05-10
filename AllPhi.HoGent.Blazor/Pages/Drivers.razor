@@ -3,6 +3,7 @@
 @using AllPhi.HoGent.Blazor.Services
 @using AllPhi.HoGent.Blazor.Dto
 @using AllPhi.HoGent.Blazor.Dto.Enums
+@using AllPhi.HoGent.Datalake.Data.Helpers
 @using AllPhi.HoGent.Blazor.Components
 
 @inject IDriverServices _driverService
@@ -11,6 +12,13 @@
 @inject IFuelCardDriverServices _fuelCardDriverService
 @inject IDriverVehicleServices _driverVehicleService
 
+
+<style>
+    .scrollable-list {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+</style>
 
 <PageTitle>Drivers</PageTitle>
 
@@ -273,7 +281,7 @@ else
                                             <p class="text-danger" style="font-size: 0.9rem;">Huisnummer is verplicht</p>
                                         }
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-7 mb-3">
                                         <label class="d-flex form-titles" for="gebruikersrol">Status:</label>
                                         <select class="form-input-select" id="gebruikersrol" @bind="@_selectedDriverDto.Status">
                                             @foreach (var role in Enum.GetValues(typeof(Status)).Cast<Status>().OrderBy(x => x.ToString()))
@@ -282,32 +290,41 @@ else
                                             }
                                         </select>
                                     </div>
-                                    <div class="col-md-12 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-titles">Gekoppelde tankkaarten:</label>
-                                        @if (_fuelCardListDto != null && _fuelCardListDto.FuelCardDtos.Any())
+                                        <div class="col-md-6" style="margin-right:15px; margin-bottom:5px;">
+                                            <input class="w-100" type="text" placeholder="Zoek op kaartnummer" @bind="_searchCardNumberTerm" @oninput="OnChangeCardNumber" />
+                                        </div>
+                                        @if (_filteredListFuelCardDto != null && _filteredListFuelCardDto.Any())
                                         {
-                                            <div class="scrollable-driver-list">
-                                                @foreach (var fuelCard in _fuelCardListDto.FuelCardDtos.OrderBy(x => x.CardNumber))
+                                            <div class="scrollable-list">
+                                                @foreach (var fuelCard in _filteredListFuelCardDto.OrderBy(x => x.CardNumber))
                                                 {
                                                     <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedfuelCard.Contains(fuelCard) ? "tabel-row-selected" : "")"
                                                          @onclick="@(() => CheckFuelCardChanged(fuelCard))">
-                                                        <label class="pointer-cursor">@fuelCard.CardNumber @fuelCard.Pin</label>
+                                                        <label class="pointer-cursor">@fuelCard.CardNumber</label>
                                                         <input class="pointer-cursor" checked="@(_checkedfuelCard.Contains(fuelCard))" type="checkbox" />
                                                     </div>
                                                 }
                                             </div>
                                         }
                                     </div>
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-titles">Gekoppelde bestuurders:</label>
-                                        @if (_vehicleListDto != null && _vehicleListDto.VehicleDtos.Any())
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-titles">Gekoppelde wagens:</label>
+                                        <div class="col-md-6" style="margin-right:15px; margin-bottom:5px;">
+                                            <input class="w-100" type="text" placeholder="Zoek op nummerplaat" @bind="_searchLicensePlateTerm" @oninput="OnChangeLicensePlate" />
+                                        </div>
+                                        @if (_filteredListVehicleDto != null && _filteredListVehicleDto.Any())
                                         {
-                                            <div class="scrollable-driver-list">
-                                                @foreach (var vehicle in _vehicleListDto.VehicleDtos.OrderBy(x => x.ChassisNumber))
+                                            <div class="scrollable-list">
+                                                @foreach (var vehicle in _filteredListVehicleDto.OrderBy(x => x.LicensePlate))
                                                 {
                                                     <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedVehicle.Contains(vehicle) ? "tabel-row-selected" : "")"
                                                          @onclick="@(() => CheckVehicleChanged(vehicle))">
-                                                        <label class="pointer-cursor">@vehicle.ChassisNumber @vehicle.LicensePlate</label>
+                                                        <div class="d-flex col-10">
+                                                            <label class="pointer-cursor col-4">@vehicle.CarBrand</label>
+                                                            <label class="pointer-cursor col-4">@vehicle.LicensePlate</label>
+                                                        </div>
                                                         <input class="pointer-cursor" checked="@(_checkedVehicle.Contains(vehicle))" type="checkbox" />
                                                     </div>
                                                 }
@@ -369,7 +386,7 @@ else
 
 
     private bool _isSortAscending = true;
-    private string _currentSortColumn = "date";
+    private string _currentSortColumn = "firstname";
     private int _pageSize = 5;
     private int _pageNumber = 1;
     private int _totalPages;
@@ -388,6 +405,13 @@ else
     private bool _error = false;
     private bool _showAllDrivers = true;
 
+    private IEnumerable<FuelCardDto> _filteredListFuelCardDto;
+    private IEnumerable<VehicleDto> _filteredListVehicleDto;
+    private string _searchCardNumberTerm = string.Empty;
+    private string _searchLicensePlateTerm = string.Empty;
+    private int _currentFilterVersion = 0;
+    private const int FilterDelay = 700;
+
     protected override async Task OnInitializedAsync()
     {
         _fuelCardListDto = await _fuelCardService.GetAllFuelCardsAsync();
@@ -399,8 +423,9 @@ else
 
     private async Task LoadDriverListDto()
     {
-        _driverListDto = await _driverService.GetAllDriversAsync(_currentSortColumn, _isSortAscending, _pageNumber, _pageSize);
-        _totalPages = (int)Math.Ceiling((double)_vehicleListDto.TotalItems / _pageSize);
+        Pagination pagination = new Pagination(_pageNumber, _pageSize);
+        _driverListDto = await _driverService.GetAllDriversAsync(_currentSortColumn, _isSortAscending, pagination);
+        _totalPages = (int)Math.Ceiling((double)_driverListDto.TotalItems / _pageSize);
     }
 
     private void AddNewDriver()
@@ -449,6 +474,9 @@ else
         _driverDeleted = false;
         _showAllDrivers = false;
 
+        _filteredListFuelCardDto = _fuelCardListDto?.FuelCardDtos ?? new();
+        _filteredListVehicleDto = _vehicleListDto?.VehicleDtos ?? new();
+
         _isLoading = false;
     }
 
@@ -463,8 +491,7 @@ else
 
                 var (statusRelatedFuelCards, statusMessageRelatedFuelCards) = await _fuelCardDriverService.UpdateDriverWithFuelCards(driverDto.Id, driverDto.FuelCardDtos.Select(x => x.Id).ToList());
 
-                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(driverDto.Id, driverDto.VehicleDtos.Select(x => x.Id)
-                                                                                                                                                                    .ToList());
+                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(driverDto.Id, driverDto.VehicleDtos.Select(x => x.Id).ToList());
 
                 if (!status || !statusRelatedFuelCards || !statusRelatedVehicles)
                 {
@@ -529,7 +556,7 @@ else
 
                 var (statusRelatedDrivers, statusMessageRelatedDrivers) = await _fuelCardDriverService.UpdateDriverWithFuelCards(_selectedDriverDto.Id, _checkedfuelCard.Select(x => x.Id)
                                                                                                                                                                         .ToList());
-                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(_selectedDriverDto.Id, _checkedfuelCard.Select(x => x.Id)
+                var (statusRelatedVehicles, statusMessageRelatedVehicles) = await _driverVehicleService.UpdateDriverWithVehicles(_selectedDriverDto.Id, _checkedVehicle.Select(x => x.Id)
                                                                                                                                                                         .ToList());
                 if (!updateFuelCard || !statusRelatedDrivers)
                 {
@@ -538,7 +565,7 @@ else
                     _error = true;
                 }
                 else
-                    _driverDeleted = true;
+                    _driverUpdated = true;
 
                 _showSendConfirmation = true;
                 await LoadDriverListDto();
@@ -570,6 +597,14 @@ else
             _checkedVehicle.Add(vehicleDto);
     }
 
+    private void ShowAllDrivers()
+    {
+        _showAllDrivers = true;
+        _driverAdded = false;
+        _selectedDriver = false;
+        _addNewDriver = false;
+    }
+
     private async Task SortTable(string columnName)
     {
         _isLoading = true;
@@ -587,6 +622,9 @@ else
         _isLoading = false;
     }
 
+    // <====================================================>
+    // <==================== PAGINATION ====================>
+    // <====================================================>
     private async Task HandlePageChanged(int page)
     {
         _isLoading = true;
@@ -599,15 +637,45 @@ else
     {
         _isLoading = true;
         _pageSize = itemsPerPage;
+        _pageNumber = 1;
         await LoadDriverListDto();
         _isLoading = false;
     }
 
-    private void ShowAllDrivers()
+    // <====================================================>
+    // <====================== SEARCH ======================>
+    // <====================================================>
+    private async Task OnChangeCardNumber(ChangeEventArgs e)
     {
-        _showAllDrivers = true;
-        _driverAdded = false;
-        _selectedDriver = false;
-        _addNewDriver = false;
+        var version = ++_currentFilterVersion;
+        _searchCardNumberTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var cardNumber = _fuelCardListDto?.FuelCardDtos.Where(x => x.CardNumber.ToLower().Contains(_searchCardNumberTerm.ToLower())).ToList();
+            if (cardNumber != null && cardNumber.Any())
+                _filteredListFuelCardDto = cardNumber;
+            else
+                _filteredListFuelCardDto = _fuelCardListDto?.FuelCardDtos ?? new();
+        }
+    }
+
+    private async Task OnChangeLicensePlate(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchLicensePlateTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var licensePlate = _vehicleListDto?.VehicleDtos.Where(x => x.LicensePlate.ToLower().Contains(_searchLicensePlateTerm.ToLower())).ToList();
+            if (licensePlate != null && licensePlate.Any())
+                _filteredListVehicleDto = licensePlate;
+            else
+                _filteredListVehicleDto = _vehicleListDto?.VehicleDtos ?? new();
+        }
     }
 }
