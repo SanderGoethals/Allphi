@@ -36,13 +36,20 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getallfuelcards")]
-        public async Task<ActionResult<FuelCardListDto>> GetAllFuelCards([Optional] string? sortby, [Optional] bool isAcending, Pagination? pagination)
+        public async Task<ActionResult<FuelCardListDto>> GetAllFuelCards([FromQuery][Optional] string? sortBy, [FromQuery][Optional] bool isAscending, [FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
         {
-            var (fuelCards, count) = await _fuelCardStore.GetAllFuelCardsAsync(sortby, isAcending, pagination);
+            Pagination? pagination = null;
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                pagination = new Pagination(pageNumber.Value, pageSize.Value);
+            }
+
+            var (fuelCards, count) = await _fuelCardStore.GetAllFuelCardsAsync(sortBy, isAscending, pagination);
             if (fuelCards == null)
             {
                 return NotFound();
             }
+
             var fuelCardListDtos = new FuelCardListDto
             {
                 FuelCardDtos = MapToFuelCardListDto(fuelCards),

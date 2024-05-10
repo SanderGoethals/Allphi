@@ -2,8 +2,14 @@
 @using AllPhi.HoGent.Blazor.Dto.Enums
 
 <style>
+    .scrollable-driver-list {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
     .review {
         font-weight: bolder;
+        margin-bottom: 2px;
     }
 
         .review span {
@@ -51,118 +57,211 @@
     .wizard-step-inactive {
         color: gray;
     }
+
+    @@media (min-width:300px) and (max-width:1344px) {
+        .wizard-steps {
+            font-size: larger;
+        }
+    }
 </style>
 
-<div class="col-md-12 mb-3 wizard-steps">
-    @for (int i = 0; i < 5; i++)
+<div class="row m-2">
+    <div class="col-md-12 mb-3 wizard-steps">
+        @for (int i = 0; i < 5; i++)
+        {
+            var step = i;
+            <div class="wizard-item">
+                <span class="wizard-step @(step <= (int)currentStep ? "wizard-step-active" : "wizard-step-inactive")" @onclick="(step == 0 || _readyForNext) ? () => AttemptToGoToStep(step) : null ">
+                    <i class="@GetIconClass(step)"></i>
+                </span>
+                @if (i < 4)
+                {
+                    <div class="wizard-line @(step < (int)currentStep ? "wizard-line-active" : "")"></div>
+                }
+            </div>
+        }
+    </div>
+
+
+    @if (currentStep == WizardStep.FuelCardDetails)
     {
-        var step = i;
-        <div class="wizard-item">
-            <span class="wizard-step @(step <= (int)currentStep ? "wizard-step-active" : "wizard-step-inactive")" @onclick="(step == 0 || _readyForNext) ? () => AttemptToGoToStep(step) : null ">
-                <i class="@GetIconClass(step)"></i>
-            </span>
-            @if (i < 4)
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Voer de kaartnummer en de vervaldatum in om een nieuwe kaart toe te voegen.
+                Deze essentiële informatie is nodig om verder te gaan.
+                Klik op 'Volgende' na het invullen van de gegevens om de registratie voort te zetten.
+                <br />
+                <br />
+                Uw nauwkeurigheid zorgt voor een vlotte onboarding.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark" for="cardnumber">Kaartnummer:</label>
+            <input class="form-input-select" name="cardnumber" @oninput="@((e) => OnInput(e, "chassisnumber"))" id="cardnumber" @bind="SelectedCardNumber" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark" for="validityday">Vervaldag:</label>
+            <input class="form-input-select" type="date" name="validityday" @oninput="@((e) => OnInput(e, "licenseplate"))" id="validityday" @bind="SelectedValidityDate" />
+        </div>
+    }
+    else if (currentStep == WizardStep.Status)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Selecteer de gewenste status en de pin voor de nieuwe kaart: 'Actief', of 'Niet actief' staat toe dat er getankt kan worden.
+                De gekozen status bepaalt de beschikbare functionaliteiten voor de kaart binnen ons systeem.
+                <br />
+                <br />
+                Kies zorgvuldig en ga verder met 'Volgende'.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex required-field-mark" for="pin">Pin:</label>
+            <input class="form-input-select" type="number" name="pin" @oninput="@((e) => OnInput(e, "pin"))" id="pin" @bind="SelectedPin" />
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex" for="status">Status:</label>
+            <select class="form-input-select" id="status" @bind="SelectedStatus">
+                <option selected value="@Status.Active">Actief</option>
+                <option value="@Status.Deactive">Niet actief</option>
+            </select>
+        </div>
+    }
+    else if (currentStep == WizardStep.FuelType)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Kies de tank type voor de nieuwe kaart: 'Actief' staat toe dat de gebruiker toegang heeft en handelingen kan uitvoeren conform hun toegewezen rol binnen het bedrijf.
+                Een 'Niet-actieve' status beperkt alle toegang en functionaliteiten tot ze geactiveerd worden.
+                <br />
+                <br />
+                Maak een weloverwogen keuze en klik op 'Volgende' om verder te gaan.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3">
+            <label class="d-flex" for="type">Type:</label>
+            @foreach (var fuelType in Enum.GetValues(typeof(FuelType)))
             {
-                <div class="wizard-line @(step < (int)currentStep ? "wizard-line-active" : "")"></div>
+                <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedFuelType.Any(x => x == (FuelType)fuelType) ? "tabel-row-selected" : "")"
+                     @onclick="@(() => CheckFuelTypeChanged((FuelType)fuelType))">
+                    <label class="pointer-cursor">@fuelType</label>
+                    <input class="pointer-cursor" checked="@(_checkedFuelType.Any(x => x == (FuelType)fuelType))" type="checkbox" />
+                </div>
             }
+        </div>
+    }
+    else if (currentStep == WizardStep.RelatedDrivers)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                Kies uit de beschikbare bestuurder die aan uw bedrijf zijn gekoppeld.
+                Elke geselecteerde bestuurder kan de nieuwe kaart inzien en beheren.
+                U kunt meerdere bestuurder selecteren om toegang te geven aan meerdere bestuurders.
+                <br />
+                <br />
+                Vink de relevante bestuurder aan en ga verder met 'Volgende' om de instellingen te bevestigen.
+            </p>
+        </div>
+        <div class="col-md-12 mb-3 d-flex flex-wrap">
+            <label class="col-md-3 form-titles">Beschikbare Drivers:</label>
+            <div class="col-md-3" style="margin-right:15px; margin-bottom:5px;">
+                <input class="w-100" type="text" placeholder="Zoek bestuurder op naam" @bind="_searchNameTerm" @oninput="OnChangeName" />
+            </div>
+            <div class="col-md-3">
+                <input class="w-100" type="number" placeholder="Zoek bestuurder rijksregister" @bind="_searchRegisterNumberTerm" @oninput="OnChangeRegister" />
+            </div>
+            @if (_filteredListDriverDto != null && _filteredListDriverDto.Any())
+            {
+                <div class="col-md-12 scrollable-driver-list">
+                    @foreach (var driver in _filteredListDriverDto.OrderBy(x => x.FirstName))
+                    {
+                        <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? "tabel-row-selected" : "")"
+                             @onclick="(() => CheckDriverChanged(driver))">
+                            <div class="d-flex col-6">
+                                <label class="pointer-cursor col-4">@driver.FirstName @driver.LastName</label>
+                                <label class="pointer-cursor col-4">@driver.RegisterNumber</label>
+                            </div>
+                            <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" style="margin-right: 40px;" />
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p>Geen bestuurder beschikbaar</p>
+            }
+
+        </div>
+    }
+    else if (currentStep == WizardStep.Review)
+    {
+        <div class="col-md-12 mb-3">
+            <p class="klantenportaal-info-add-new-user">
+                U bevindt zich nu in de laatste fase van het tankkaartstoevoegingsproces.
+                Gelieve zorgvuldig alle door u gemaakte keuzes en instellingen te herzien.
+                Controleer de kaart informatie, toegewezen pin, status en geselecteerde bestuurders.
+                Na bevestiging zal de nieuwe kaart worden aangemaakt.
+                <br />
+                <br />
+                Druk op 'Opslaan' om te bevestigen.
+                U heeft altijd de mogelijkheid om later wijzigingen aan te brengen en de instellingen van de gebruiker bij te werken.
+            </p>
+        </div>
+        <div class="col-md-6 mb-3">
+            <p class="review">Kaartnummer: <span>@SelectedCardNumber</span></p>
+            <p class="review">Vervaldag: <span>@SelectedValidityDate</span></p>
+            <p class="review">Pin: <span>@SelectedPin</span></p>
+            <p class="review">Status: <span>@SelectedStatus</span></p>
+        </div>
+        <div class="col-md-6 mb-3">
+            <p class="review">Geselecteerde types:</p>
+            @foreach (var fuelcardtype in _checkedFuelType)
+            {
+                <p class="review">- <span>@fuelcardtype</span></p>
+            }
+            <div class="col-md-6 mb-3 mt-3">
+                <p class="review">Geselecteerde bestuurders:</p>
+                @foreach (var driver in _checkedDriver)
+                {
+                    <p class="review">- <span>@driver.FirstName @driver.LastName</span></p>
+                }
+            </div>
         </div>
     }
 </div>
 
+<div class="d-flex m-2">
+    @if (currentStep != WizardStep.FuelCardDetails)
+    {
+        <button type="button" class="btn buttons-succes m-2" @onclick="GoToPreviousStep">Vorige</button>
+    }
 
-@if (currentStep == WizardStep.FuelCardDetails)
-{
-    <div class="col-md-12 mb-3">
-        <p class="klantenportaal-info-add-new-user">
-            Voer de chassisnummer en nummerplaat in om een nieuwe wagen toe te voegen.
-            Deze essentiële informatie is nodig om verder te gaan.
-            Klik op 'Volgende' na het invullen van de gegevens om de registratie voort te zetten.
-            <br />
-            <br />
-            Uw nauwkeurigheid zorgt voor een vlotte onboarding.
-        </p>
-    </div>
-    <div class="col-md-12 mb-3">
-        <label class="d-flex required-field-mark" for="cardnumber">Kaartnummer:</label>
-        <input class="form-input-select" name="cardnumber" @oninput="@((e) => OnInput(e, "chassisnumber"))" id="cardnumber" @bind="SelectedCardNumber" />
-    </div>
-    <div class="col-md-12 mb-3">
-        <label class="d-flex required-field-mark" for="validityday">Vervaldag:</label>
-        <input class="form-input-select" type="date" name="validityday" @oninput="@((e) => OnInput(e, "licenseplate"))" id="validityday" @bind="SelectedValidityDate" />
-    </div>
-}
-else if (currentStep == WizardStep.Status)
-{
-    <div class="col-md-12 mb-3">
-        <p class="klantenportaal-info-add-new-user">
-            Selecteer de gewenste status en de pin voor de nieuwe kaart: 'Actief', of 'Niet actief' staat toe dat er getankt kan worden.
-            De gekozen status bepaalt de beschikbare functionaliteiten voor de kaart binnen ons systeem.
-            <br />
-            <br />
-            Kies zorgvuldig en ga verder met 'Volgende'.
-        </p>
-    </div>
-    <div class="col-md-12 mb-3">
-        <label class="d-flex required-field-mark" for="pin">Pin:</label>
-        <input class="form-input-select" type="number" name="pin" @oninput="@((e) => OnInput(e, "pin"))" id="pin" @bind="SelectedPin" />
-    </div>
-    <div class="col-md-12 mb-3">
-        <label class="d-flex" for="status">Status:</label>
-        <select class="form-input-select" id="status" @bind="SelectedStatus">
-            <option selected value="@Status.Active">Actief</option>
-            <option value="@Status.Deactive">Niet actief</option>
-        </select>
-    </div>
-}
-else if (currentStep == WizardStep.FuelType)
-{
-    <div class="col-md-12 mb-3">
-        <p class="klantenportaal-info-add-new-user">
-            Kies de tank type voor de nieuwe kaart: 'Actief' staat toe dat de gebruiker toegang heeft en handelingen kan uitvoeren conform hun toegewezen rol binnen het bedrijf.
-            Een 'Niet-actieve' status beperkt alle toegang en functionaliteiten tot ze geactiveerd worden.
-            <br />
-            <br />
-            Maak een weloverwogen keuze en klik op 'Volgende' om verder te gaan.
-        </p>
-    </div>
-    <div class="col-md-12 mb-3">
-        <label class="d-flex" for="type">Type:</label>
-        @foreach (var fuelType in Enum.GetValues(typeof(FuelType)))
+    @if (currentStep != WizardStep.Review)
+    {
+        @if (!_readyForNext)
         {
-            <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedFuelType.Any(x => x == (FuelType)fuelType) ? "tabel-row-selected" : "")"
-                 @onclick="@(() => CheckFuelTypeChanged((FuelType)fuelType))">
-                <label class="pointer-cursor">@fuelType</label>
-                <input class="pointer-cursor" checked="@(_checkedFuelType.Any(x => x == (FuelType)fuelType))" type="checkbox" />
-            </div>
+            <button type="button" disabled class="btn btn-disabled  m-2">Volgende</button>
         }
-    </div>
-}
-else if (currentStep == WizardStep.RelatedDrivers)
-{
-    <div class="col-md-12 mb-3">
-        <p class="klantenportaal-info-add-new-user">
-            Kies uit de beschikbare bestuurder die aan uw bedrijf zijn gekoppeld.
-            Elke geselecteerde bestuurder kan de nieuwe kaart inzien en beheren.
-            U kunt meerdere bestuurder selecteren om toegang te geven aan meerdere bestuurders.
-            <br />
-            <br />
-            Vink de relevante bestuurder aan en ga verder met 'Volgende' om de instellingen te bevestigen.
-        </p>
-    </div>
-    <div class="col-md-12 mb-3">
-        <label>Gekoppelde bestuurders:</label>
-        @foreach (var driver in Drivers)
+        else
         {
-            <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? "tabel-row-selected" : "")"
-                 @onclick="(() => CheckDriverChanged(driver))">
-                <label class="pointer-cursor">@driver.FirstName @driver.LastName</label>
-                <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" />
-            </div>
+            <button type="button" class="btn buttons-succes m-2" @onclick="GoToNextStep">Volgende</button>
         }
-    </div>
-}
+    }
+
+    else
+    {
+        <button type="button" class="btn buttons-succes m-2" @onclick="HandleSave">Opslaan</button>
+    }
+</div>
 
 @code {
+    private string _searchNameTerm = string.Empty;
+    private string _searchRegisterNumberTerm = string.Empty;
+    private int _currentFilterVersion = 0;
+    private const int FilterDelay = 700;
+
+    private IEnumerable<DriverDto> _filteredListDriverDto;
+
     public enum WizardStep
     {
         FuelCardDetails,
@@ -196,6 +295,7 @@ else if (currentStep == WizardStep.RelatedDrivers)
     protected override async Task OnInitializedAsync()
     {
         IsFormValid();
+        _filteredListDriverDto = Drivers ?? new();
     }
 
     private void IsFormValid()
@@ -220,15 +320,15 @@ else if (currentStep == WizardStep.RelatedDrivers)
     private async Task HandleSave()
     {
         var fuelCard = new FuelCardDto
-            {
-                Id = Guid.NewGuid(),
-                CardNumber = SelectedCardNumber,
-                Pin = SelectedPin,
-                Status = SelectedStatus,
-                ValidityDate = SelectedValidityDate,
-                DriverDtos = _checkedDriver,
-                FuelCardFuelTypesDto = _checkedFuelType.Select(fuelType => new FuelCardFuelTypeDto { FuelType = fuelType }).ToList()
-            };
+        {
+            Id = Guid.NewGuid(),
+            CardNumber = SelectedCardNumber,
+            Pin = SelectedPin,
+            Status = SelectedStatus,
+            ValidityDate = SelectedValidityDate,
+            DriverDtos = _checkedDriver,
+            FuelCardFuelTypesDto = _checkedFuelType.Select(fuelType => new FuelCardFuelTypeDto { FuelType = fuelType }).ToList()
+        };
 
         await OnSave.InvokeAsync(fuelCard);
     }
@@ -301,5 +401,39 @@ else if (currentStep == WizardStep.RelatedDrivers)
                 SelectedPin = int.Parse(e.Value.ToString());
         }
         IsFormValid();
+    }
+
+    private async Task OnChangeName(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchNameTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var naam = Drivers?.Where(x => x.FirstName.ToLower().Contains(_searchNameTerm.ToLower())).ToList();
+            if (naam != null && naam.Any())
+                _filteredListDriverDto = naam;
+            else
+                _filteredListDriverDto = Drivers ?? new();
+        }
+    }
+
+    private async Task OnChangeRegister(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchRegisterNumberTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var registerNumber = Drivers.Where(x => x.RegisterNumber.Contains(_searchRegisterNumberTerm)).ToList();
+            if (registerNumber != null && registerNumber.Any())
+                _filteredListDriverDto = registerNumber;
+            else
+                _filteredListDriverDto = Drivers ?? new();
+        }
     }
 }

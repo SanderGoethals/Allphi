@@ -11,8 +11,6 @@
 @inject IVehicleServices _vehicleService
 @inject IDriverVehicleServices _driverVehicleService
 
-<PageTitle>Vehicles</PageTitle>
-
 <style>
     .table-responsive {
         overflow-x: auto;
@@ -41,6 +39,8 @@
         background-color: rgba(33,150,243,0.058823529411764705) !important;
     }
 </style>
+
+<PageTitle>Vehicles</PageTitle>
 
 @if (_isLoading)
 {
@@ -91,16 +91,16 @@ else
                                     @foreach (var vehicle in _vehicleListDto.VehicleDtos)
                                     {
                                         <tr class="pointer-cursor">
-                                            <td class="align-middle border-start" @onclick="(() => SelectVehicle(vehicle))"><span class="fas fa-car-side"></span></td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.ChassisNumber</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.LicensePlate</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.CarBrand</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.FuelType</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.TypeOfCar</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.Color</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.NumberOfDoors.GetDescription()</td>
-                                            <td @onclick="(() => SelectVehicle(vehicle))">@vehicle.Status</td>
-                                            <td @onclick="(() => SelectAndShowDelete(vehicle))">
+                                            <td class="align-middle border-start" @onclick="(async () => await SelectVehicle(vehicle))"><span class="fas fa-car-side"></span></td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.ChassisNumber</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.LicensePlate</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.CarBrand</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.FuelType</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.TypeOfCar</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.Color</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.NumberOfDoors.GetDescription()</td>
+                                            <td @onclick="(async () => await SelectVehicle(vehicle))">@vehicle.Status</td>
+                                            <td @onclick="(async () => await SelectAndShowDelete(vehicle))">
                                                 <span type="button" class="fa fa-trash-can" @onclick="() => _showDeleteConfirmation = true" style="color: #cf5256"></span>
                                             </td>
                                         </tr>
@@ -322,13 +322,13 @@ else
                                         </div>
                                         @if (_filteredListDriverDto != null && _filteredListDriverDto.Any())
                                         {
-                                            <div class="col-md-12 scrollable-driver-list">
+                                            <div class="col-12 scrollable-driver-list">
                                                 @foreach (var driver in _filteredListDriverDto.OrderBy(x => x.FirstName))
                                                 {
                                                     <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? " tabel-row-selected" : "" )"
                                                          @onclick="@(() => CheckFuelCardChanged(driver))">
                                                         <div class="d-flex col-6">
-                                                            <label class="pointer-cursor col-4">@driver.FirstName @driver.LastName</label>
+                                                            <label class="pointer-cursor col-4" style="min-width: 154px;">@driver.FirstName @driver.LastName</label>
                                                             <label class="pointer-cursor col-4">@driver.RegisterNumber</label>
                                                         </div>
                                                         <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" style="margin-right: 40px; " />
@@ -526,7 +526,7 @@ else
         catch (Exception ex)
         {
             ErrorTitle = " Oei, er ging iets verkeerd tijdens het verwijderen";
-            ErrorMessage = "Excuses! Er ging iets verkeerd tijdens het verwijderen.";
+            ErrorMessage = $"Excuses! Er ging iets verkeerd tijdens het verwijderen.  Error: {ex.Message}";
             _error = true;
             _showDeleteConfirmation = false;
         }
@@ -537,6 +537,7 @@ else
     private async Task UpdateSelectedUser()
     {
         _isLoading = true;
+
         try
         {
             if (_selectedVehicleDto is not null)
@@ -575,6 +576,13 @@ else
             _checkedDriver.Add(driverDto);
     }
 
+    private void ShowAllCars()
+    {
+        _showAllCars = true;
+        _addNewVehicle = false;
+        _selectedVehicle = false;
+    }
+
     private async Task SortTable(string columnName)
     {
         _isLoading = true;
@@ -589,15 +597,10 @@ else
         _isLoading = false;
     }
 
+    // <====================================================>
+    // <==================== PAGINATION ====================>
+    // <====================================================>
     private async Task HandlePageChanged(int page)
-    {
-        _isLoading = true;
-        _pageNumber = page;
-        await LoadVehicleListDto();
-        _isLoading = false;
-    }
-
-    private async Task HandlePage(int page)
     {
         _isLoading = true;
         _pageNumber = page;
@@ -614,13 +617,9 @@ else
         _isLoading = false;
     }
 
-    private void ShowAllCars()
-    {
-        _showAllCars = true;
-        _addNewVehicle = false;
-        _selectedVehicle = false;
-    }
-
+    // <====================================================>
+    // <====================== SEARCH ======================>
+    // <====================================================>
     private async Task OnChangeName(ChangeEventArgs e)
     {
         var version = ++_currentFilterVersion;

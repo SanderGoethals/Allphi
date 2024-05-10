@@ -312,16 +312,19 @@ else
                                     <div class="col-md-6 mb-3">
                                         <label class="form-titles">Gekoppelde wagens:</label>
                                         <div class="col-md-6" style="margin-right:15px; margin-bottom:5px;">
-                                            <input class="w-100" type="text" placeholder="Zoek op nummerplaat" @bind="_searchCardNumberTerm" @oninput="OnChangeLicensePlate" />
+                                            <input class="w-100" type="text" placeholder="Zoek op nummerplaat" @bind="_searchLicensePlateTerm" @oninput="OnChangeLicensePlate" />
                                         </div>
                                         @if (_filteredListVehicleDto != null && _filteredListVehicleDto.Any())
                                         {
                                             <div class="scrollable-list">
-                                                @foreach (var vehicle in _filteredListVehicleDto.OrderBy(x => x.ChassisNumber))
+                                                @foreach (var vehicle in _filteredListVehicleDto.OrderBy(x => x.LicensePlate))
                                                 {
                                                     <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedVehicle.Contains(vehicle) ? "tabel-row-selected" : "")"
                                                          @onclick="@(() => CheckVehicleChanged(vehicle))">
-                                                        <label class="pointer-cursor">@vehicle.LicensePlate</label>
+                                                        <div class="d-flex col-10">
+                                                            <label class="pointer-cursor col-4">@vehicle.CarBrand</label>
+                                                            <label class="pointer-cursor col-4">@vehicle.LicensePlate</label>
+                                                        </div>
                                                         <input class="pointer-cursor" checked="@(_checkedVehicle.Contains(vehicle))" type="checkbox" />
                                                     </div>
                                                 }
@@ -383,7 +386,7 @@ else
 
 
     private bool _isSortAscending = true;
-    private string _currentSortColumn = "date";
+    private string _currentSortColumn = "firstname";
     private int _pageSize = 5;
     private int _pageNumber = 1;
     private int _totalPages;
@@ -562,7 +565,7 @@ else
                     _error = true;
                 }
                 else
-                    _driverDeleted = true;
+                    _driverUpdated = true;
 
                 _showSendConfirmation = true;
                 await LoadDriverListDto();
@@ -594,6 +597,14 @@ else
             _checkedVehicle.Add(vehicleDto);
     }
 
+    private void ShowAllDrivers()
+    {
+        _showAllDrivers = true;
+        _driverAdded = false;
+        _selectedDriver = false;
+        _addNewDriver = false;
+    }
+
     private async Task SortTable(string columnName)
     {
         _isLoading = true;
@@ -611,6 +622,9 @@ else
         _isLoading = false;
     }
 
+    // <====================================================>
+    // <==================== PAGINATION ====================>
+    // <====================================================>
     private async Task HandlePageChanged(int page)
     {
         _isLoading = true;
@@ -626,14 +640,6 @@ else
         _pageNumber = 1;
         await LoadDriverListDto();
         _isLoading = false;
-    }
-
-    private void ShowAllDrivers()
-    {
-        _showAllDrivers = true;
-        _driverAdded = false;
-        _selectedDriver = false;
-        _addNewDriver = false;
     }
 
     // <====================================================>

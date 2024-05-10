@@ -1,4 +1,5 @@
 ﻿using AllPhi.HoGent.Blazor.Dto;
+using AllPhi.HoGent.Datalake.Data.Helpers;
 using System.Runtime.InteropServices;
 
 namespace AllPhi.HoGent.Blazor.Services
@@ -7,7 +8,7 @@ namespace AllPhi.HoGent.Blazor.Services
     {
         Task<(bool, string message)> AddFuelCardAsync(FuelCardDto fuelCardDto);
         Task<bool> DeleteFuelCardAsync(Guid fuelCardId);
-        Task<FuelCardListDto> GetAllFuelCardsAsync([Optional] string? sortBy, [Optional] bool isAscending, [Optional] int pageNumber, [Optional] int pageSize);
+        Task<FuelCardListDto> GetAllFuelCardsAsync([Optional] string? sortBy, [Optional] bool isAscending, [Optional] Pagination pagination);
         Task<bool> UpdateFuelCardAsync(FuelCardDto fuelCardDto);
     }
 }
