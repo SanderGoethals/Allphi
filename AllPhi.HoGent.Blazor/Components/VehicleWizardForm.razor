@@ -53,7 +53,7 @@
         color: gray;
     }
 
-    @@media (min-width:300px) and (max-width:1344px){
+    @@media (min-width:300px) and (max-width:1344px) {
         .wizard-steps {
             font-size: larger;
         }
@@ -185,17 +185,25 @@
                 Vink de relevante bestuurder aan en ga verder met 'Volgende' om de instellingen te bevestigen.
             </p>
         </div>
-        <div class="col-md-12 mb-3">
-            <label>Beschikbare Drivers:</label>
-
-            @if (Drivers != null && Drivers.Any())
+        <div class="col-md-12 mb-3 d-flex flex-wrap">
+            <label class="col-md-3 form-titles">Beschikbare Drivers:</label>
+            <div class="col-md-3" style="margin-right:15px; margin-bottom:5px;">
+                <input class="w-100" type="text" placeholder="Zoek bestuurder op naam" @bind="_searchNameTerm" @oninput="OnChangeName" />
+            </div>
+            <div class="col-md-3">
+                <input class="w-100" type="number" placeholder="Zoek bestuurder rijksregister" @bind="_searchRegisterNumberTerm" @oninput="OnChangeRegister" />
+            </div>
+            @if (_filteredListDriverDto != null && _filteredListDriverDto.Any())
             {
-                @foreach (var driver in Drivers.OrderBy(x => x.FirstName))
+                @foreach (var driver in _filteredListDriverDto.OrderBy(x => x.FirstName))
                 {
                     <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? "tabel-row-selected" : "")"
                          @onclick="(() => CheckDriverChanged(driver))">
-                        <label class="pointer-cursor">@driver.FirstName @driver.LastName</label>
-                        <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" />
+                        <div class="d-flex col-6">
+                            <label class="pointer-cursor col-4">@driver.FirstName @driver.LastName</label>
+                            <label class="pointer-cursor col-4">@driver.RegisterNumber</label>
+                        </div>
+                        <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" style="margin-right: 40px;"/>
                     </div>
                 }
             }
@@ -268,6 +276,13 @@
 @using AllPhi.HoGent.Blazor.Dto
 
 @code {
+    private string _searchNameTerm = string.Empty;
+    private string _searchRegisterNumberTerm = string.Empty;
+    private int _currentFilterVersion = 0;
+    private const int FilterDelay = 700;
+
+    private IEnumerable<DriverDto> _filteredListDriverDto;
+
     public enum WizardStep
     {
         VehicleDetail_1,
@@ -301,6 +316,7 @@
     protected override async Task OnInitializedAsync()
     {
         IsFormValid();
+        _filteredListDriverDto = Drivers ?? new();
     }
 
     private async Task HandleSave()
@@ -391,6 +407,40 @@
         if (_readyForNext || step < (int)currentStep)
         {
             GoToStep(step);
+        }
+    }
+
+    private async Task OnChangeName(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchNameTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var naam = Drivers?.Where(x => x.FirstName.ToLower().Contains(_searchNameTerm.ToLower())).ToList();
+            if (naam != null && naam.Any())
+                _filteredListDriverDto = naam;
+            else
+                _filteredListDriverDto = Drivers ?? new();
+        }
+    }
+
+    private async Task OnChangeRegister(ChangeEventArgs e)
+    {
+        var version = ++_currentFilterVersion;
+        _searchRegisterNumberTerm = e.Value?.ToString() ?? string.Empty;
+
+        await Task.Delay(FilterDelay);
+
+        if (version == _currentFilterVersion)
+        {
+            var registerNumber = Drivers.Where(x => x.RegisterNumber.Contains(_searchRegisterNumberTerm)).ToList();
+            if (registerNumber != null && registerNumber.Any())
+                _filteredListDriverDto = registerNumber;
+            else
+                _filteredListDriverDto = Drivers ?? new();
         }
     }
 }

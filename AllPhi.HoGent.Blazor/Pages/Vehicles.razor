@@ -58,6 +58,7 @@ else
                         @if (_showAllCars)
                         {
                             <button type="button" class="btn buttons-succes m-2" @onclick="AddNewVehicle">Voertuig toevoegen</button>
+                            <input />
                         }
                         else if (!_showAllCars)
                         {
@@ -326,8 +327,11 @@ else
                                                 {
                                                     <div class="col-12 d-flex justify-content-between linked-subscriptions-first pointer-cursor border-bottom-solid @(_checkedDriver.Contains(driver) ? " tabel-row-selected" : "" )"
                                                          @onclick="@(() => CheckFuelCardChanged(driver))">
-                                                        <label class="pointer-cursor">@driver.FirstName @driver.RegisterNumber</label>
-                                                        <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" />
+                                                        <div class="d-flex col-6">
+                                                            <label class="pointer-cursor col-4">@driver.FirstName @driver.LastName</label>
+                                                            <label class="pointer-cursor col-4">@driver.RegisterNumber</label>
+                                                        </div>
+                                                        <input class="pointer-cursor" checked="@(_checkedDriver.Contains(driver))" type="checkbox" style="margin-right: 40px; " />
                                                     </div>
                                                 }
                                             </div>
@@ -605,6 +609,7 @@ else
     {
         _isLoading = true;
         _pageSize = itemsPerPage;
+        _pageNumber = 1;
         await LoadVehicleListDto();
         _isLoading = false;
     }

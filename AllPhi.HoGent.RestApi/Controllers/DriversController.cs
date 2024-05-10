@@ -25,10 +25,19 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<ActionResult<(List<DriverDto>, int)>> GetAllDrivers([Optional] string? sortBy, [Optional] bool isAscending, Pagination? pagination = null)
+        public async Task<ActionResult<(List<DriverDto>, int)>> GetAllDrivers([FromQuery][Optional] string? sortBy, [FromQuery][Optional] bool isAscending, [FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
         {
+            Pagination? pagination = null;
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                pagination = new Pagination(pageNumber.Value, pageSize.Value);
+            }
+
             var (drivers, count) = await _driverStore.GetAllDriversAsync(sortBy, isAscending, pagination);
-            
+            if (drivers == null)
+            {
+                return NotFound();
+            }
 
             var driverListDtos =  new DriverListDto
             {

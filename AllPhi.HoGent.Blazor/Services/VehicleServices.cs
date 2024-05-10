@@ -21,7 +21,9 @@ namespace AllPhi.HoGent.Blazor.Services
             var queryString = HttpUtility.ParseQueryString(string.Empty);
             if (!string.IsNullOrEmpty(sortBy)) 
                 queryString["sortBy"] = sortBy;
+
             queryString["isAscending"] = isAscending.ToString();
+
             if (pagination != null)
             {
                 queryString["pageNumber"] = pagination.PageNumber.ToString();

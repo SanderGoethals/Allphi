@@ -52,11 +52,13 @@ namespace AllPhi.HoGent.RestApi.Controllers
             {
                 return NotFound();
             }
+
             var vehicleListDto = new VehicleListDto
             {
                 VehicleDtos = MapToVehicleListDto(vehicles),
                 TotalItems = count 
             };
+
             return Ok(vehicleListDto);
         }
 

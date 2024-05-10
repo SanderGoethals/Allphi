@@ -22,13 +22,12 @@
         background-color: #ffffff; /* Light theme background */
         color: #212529; /* Dark text color for light mode */
     }
-
 </style>
 
 <div class=" nav-menu @ThemeClass" style="width: 240px; ">
     <div class="rounded text-info p-2">
-        <div style="text-align:center;"
-        <img src="images/AllphiLogoSymbolTransparant.png" style="width : 50px; height : auto;"/>
+        <div style="text-align:center;">
+            <img src="images/AllphiLogoSymbolTransparant.png" style="width : 50px; height : auto;" />
         </div>
         <hr class="my-2" />
         <a class="icon-color d-block text-decoration-none px-4 py-4 @(_selectedLink == "dashboard" || _selectedLink == "" ? "selected-grow" : "hover-grow")" @onclick='() => SelectLink("dashboard")' href="/">

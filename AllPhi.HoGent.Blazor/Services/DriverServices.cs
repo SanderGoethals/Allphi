@@ -1,4 +1,5 @@
 ﻿using AllPhi.HoGent.Blazor.Dto;
+using AllPhi.HoGent.Datalake.Data.Helpers;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -16,13 +17,19 @@ namespace AllPhi.HoGent.Blazor.Services
             _httpClient = httpClient;
         }
 
-        public async Task<DriverListDto> GetAllDriversAsync([Optional] string? sortBy, [Optional] bool isAscending, [Optional] int pageNumber, [Optional] int pageSize)
+        public async Task<DriverListDto> GetAllDriversAsync([Optional] string? sortBy, [Optional] bool isAscending, [Optional] Pagination pagination)
         {
             var queryString = HttpUtility.ParseQueryString(string.Empty);
-            if (!string.IsNullOrEmpty(sortBy)) queryString["sortBy"] = sortBy;
+            if (!string.IsNullOrEmpty(sortBy)) 
+                queryString["sortBy"] = sortBy;
+
             queryString["isAscending"] = isAscending.ToString();
-            queryString["pageNumber"] = pageNumber.ToString();
-            queryString["pageSize"] = pageSize.ToString();
+
+            if (pagination != null)
+            {
+                queryString["pageNumber"] = pagination.PageNumber.ToString();
+                queryString["pageSize"] = pagination.PageSize.ToString();
+            }
 
             string url = $"api/drivers/getalldrivers?{queryString}";
 
