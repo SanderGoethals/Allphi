@@ -2,7 +2,7 @@
 {
     public class ValidateRegisterNumber
     {
-        public static bool IsValidDriverRegisterNumber(string registerNumber)
+        public static bool IsValidDriverRegisterNumber(string registerNumber, DateTime birthdate)
         {
 
             if (string.IsNullOrEmpty(registerNumber))
@@ -10,7 +10,7 @@
                 return false;
             }
 
-            if (registerNumber.Length != 11 || !IsDatePartValid(registerNumber.Substring(0, 6)))
+            if (registerNumber.Length != 11 || !IsDatePartValid(registerNumber.Substring(0, 6), birthdate))
             {
                 return false;
             }
@@ -26,7 +26,7 @@
             return (97 - (numberToCheck % 97)) == controlNumber;
         }
 
-        private static bool IsDatePartValid(string datePart)
+        private static bool IsDatePartValid(string datePart, DateTime birthdate)
         {
             // Check if the string has the correct format for YYMMDD
             if (datePart.Length != 6)
@@ -47,8 +47,8 @@
 
             try
             {
-                DateTime birthDate = new DateTime(year, month, day);
-                return true;
+                DateTime birthDateRegisterNumber = new DateTime(year, month, day);
+                return birthdate == birthDateRegisterNumber;
             }
             catch
             {

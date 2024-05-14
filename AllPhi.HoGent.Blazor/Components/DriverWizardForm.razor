@@ -598,7 +598,7 @@
         if (field == "validateNumber")
             SelectedRegisternumber = e?.Value?.ToString() ?? "";
 
-        if (!ValidateRegisterNumber.IsValidDriverRegisterNumber(SelectedRegisternumber))
+        if (!ValidateRegisterNumber.IsValidDriverRegisterNumber(SelectedRegisternumber, SelectedBirthdate))
         {
             ValidationMessage = "Ongeldig rijksregisternummer. Controleer het nummer a.u.b";
             //SelectedRegisternumber = "";
