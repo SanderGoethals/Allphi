@@ -138,7 +138,7 @@
 
         <div class="col-md-12 mb-3">
             <label class="d-flex required-field-mark form-titles" for="geboortedatum">Geboortedatum:</label>
-            <input class="form-input-select" type="date" name="geboortedatum" id="geboortedatum" min="@MinDate" max="@MaxDate" @oninput="@((e) => ValidateNumber(e, "dateOfBirth"))" @bind="SelectedBirthdate" />
+            <input class="form-input-select" type="date" name="geboortedatum" id="geboortedatum" onkeydown="return false;" min="@MinDate" max="@MaxDate" @oninput="@((e) => ValidateNumber(e, "dateOfBirth"))" @bind="SelectedBirthdate" />
         </div>
 
         <div class="col-md-12 mb-3">
@@ -492,6 +492,7 @@
         if (currentStep > WizardStep.DriverDetails)
         {
             currentStep--;
+            IsFormValid();
         }
     }
 
@@ -527,6 +528,7 @@
 
     private void AttemptToGoToStep(int step)
     {
+        IsFormValid();
         if (_readyForNext || step < (int)currentStep)
         {
             GoToStep(step);
@@ -593,10 +595,14 @@
         IsFormValid();
     }
 
-    private void ValidateNumber(ChangeEventArgs e, string field)
+    private async Task ValidateNumber(ChangeEventArgs e, string field)
     {
         if (field == "validateNumber")
             SelectedRegisternumber = e?.Value?.ToString() ?? "";
+
+        if (field == "dateOfBirth" && e.Value != null && e.Value != "")
+            SelectedBirthdate = DateTime.Parse(e?.Value?.ToString());
+
 
         if (!ValidateRegisterNumber.IsValidDriverRegisterNumber(SelectedRegisternumber, SelectedBirthdate))
         {

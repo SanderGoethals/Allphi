@@ -397,8 +397,8 @@
                 SelectedCardNumber = e.Value.ToString();
             else if (field == "validityday")
                 SelectedValidityDate = DateTime.Parse(e.Value.ToString());
-            else if (field == "pin")
-                SelectedPin = int.Parse(e.Value.ToString());
+            else if (field == "pin" && e.Value != null && e.Value != "")
+                SelectedPin = int.Parse(e?.Value?.ToString());
         }
         IsFormValid();
     }
