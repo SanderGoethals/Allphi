@@ -165,5 +165,24 @@ namespace AllPhi.HoGent.Testing.ApiTest
             Assert.IsType<BadRequestResult>(result);
             #endregion
         }
+
+        [Fact]
+        public async Task UpdateFuelCardDriversByFuelCardId_ReturnsBadRequest_WhenFuelCardIdIsEmpty()
+        {
+            #region Arrange
+            var fuelCardDriverStoreMock = FuelCardDriverStoreMock.GetFuelCardDriverStoreMock();
+            var controller = new FuelCardDriverController(fuelCardDriverStoreMock.Object);
+            var fuelCardId = Guid.Empty; // Gebruik een lege Guid
+            var newDriverIds = new List<Guid> { Guid.NewGuid() }; // Gebruik een lijst met specifieke Guids
+            #endregion
+
+            #region Act
+            var result = await controller.UpdateFuelCardDriversByFuelCardId(fuelCardId, newDriverIds);
+            #endregion
+
+            #region Assert
+            Assert.IsType<BadRequestResult>(result);
+            #endregion
+        }
     }
 }
