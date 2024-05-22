@@ -80,9 +80,10 @@ namespace AllPhi.HoGent.RestApi.Controllers
                 }
 
                 var (vehicles, count) = await _vehicleStore.GetAllVehiclesAsync(filterVehicle, sortBy, isAscending, pagination);
-                if (vehicles == null)
+
+                if (!vehicles.Any())
                 {
-                    return NotFound();
+                    return NotFound(new { Message = "No vehicles found." });
                 }
 
                 var vehicleListDto = new VehicleListDto
@@ -110,54 +111,135 @@ namespace AllPhi.HoGent.RestApi.Controllers
         [HttpPost("addvehicle")]
         public async Task<IActionResult> AddVehicle(VehicleDto vehicleDto)
         {
-            if (_vehicleStore.VehicleWithChassisNumberExists(vehicleDto.ChassisNumber))
+            try
             {
-                return BadRequest("Vehicle with this chassis number already exists");
+                if (vehicleDto == null)
+                {
+                    return BadRequest("No vehicle data provided.");
+                }
 
+                if (_vehicleStore.VehicleWithChassisNumberExists(vehicleDto.ChassisNumber))
+                {
+                    return BadRequest("Vehicle with this chassis number already exists");
+                }
+                if (_vehicleStore.VehicleWithLicensePlateExists(vehicleDto.LicensePlate))
+                {
+                    return BadRequest("Vehicle with this license plate already exists");
+                }
+
+                Vehicle vehicle = MapToVehicle(vehicleDto);
+                await _vehicleStore.AddVehicle(vehicle);
+                return Ok();
             }
-            if (_vehicleStore.VehicleWithLicensePlateExists(vehicleDto.LicensePlate))
+            catch (ArgumentException ex)
             {
-                return BadRequest("Vehicle with this license plate already exists");
+                return BadRequest($"Invalid argument: {ex.Message}");
             }
-            Vehicle vehicle = MapToVehicle(vehicleDto);
-            await _vehicleStore.AddVehicle(vehicle);
-            return Ok();
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status409Conflict, $"Operation error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected error occurred: {ex.Message}");
+            }
         }
+
 
         [HttpPost("updatevehicle")]
         public async Task<IActionResult> UpdateVehicle(VehicleDto vehicleDto)
         {
-            Vehicle vehicle = MapToVehicle(vehicleDto);
-            await _vehicleStore.UpdateVehicle(vehicle);
-            return Ok();
+            try
+            {
+                if (vehicleDto == null)
+                {
+                    return BadRequest(new { Message = "No vehicle found." });
+                }
+
+                Vehicle vehicle = MapToVehicle(vehicleDto);
+                await _vehicleStore.UpdateVehicle(vehicle);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest($"Invalid argument: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound($"Operation error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected error occurred: {ex.Message}");
+            }
         }
+
 
         [HttpDelete("deletevehicle/{vehicleid}")]
         public async Task<IActionResult> DeleteVehicle(Guid vehicleId)
         {
-            await _vehicleStore.RemoveVehicle(vehicleId);
-            return Ok();
+            try
+            {
+                if (vehicleId == null || vehicleId.Equals(Guid.Empty))
+                {
+                    return NotFound(new { message = "Vehicle ID is empty." });
+                }
+
+                await _vehicleStore.RemoveVehicle(vehicleId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest($"Invalid argument: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound($"Operation error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected error occurred: {ex.Message}");
+            }
         }
 
         [HttpGet("getvehiclebydriverid/{driverId}")]
         public async Task<ActionResult<VehicleListDto>> GetVehicleByDriverId(Guid driverId)
         {
-            List<DriverVehicle> vehicles = await _driverVehicleStore.GetDriverWithConnectedVehicleByDriverId(driverId);
-            if (vehicles == null)
+            try
             {
-                return NotFound();
-            }
-            VehicleListDto vehicleListDto = new VehicleListDto();
-            foreach (var vehicle in vehicles)
-            {
-                VehicleDto vehicleDto = MapToVehicleDto(vehicle.Vehicle);
-                vehicleListDto.VehicleDtos.Add(vehicleDto);
-            }
+                if (driverId == null || driverId.Equals(Guid.Empty))
+                {
+                    return BadRequest(new { Message = "No Driver ID Found." });
+                }
 
-            return Ok(vehicleListDto);
+                List<DriverVehicle> vehicles = await _driverVehicleStore.GetDriverWithConnectedVehicleByDriverId(driverId);
+                if (!vehicles.Any())
+                {
+                    return NotFound($"No vehicles found for driver ID: {driverId}");
+                }
+
+                VehicleListDto vehicleListDto = new VehicleListDto();
+                foreach (var vehicle in vehicles)
+                {
+                    VehicleDto vehicleDto = MapToVehicleDto(vehicle.Vehicle);
+                    vehicleListDto.VehicleDtos.Add(vehicleDto);
+                }
+
+                return Ok(vehicleListDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest($"Invalid argument: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound($"Operation error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected error occurred: {ex.Message}");
+            }
         }
-
-        //[HttpGet("getvehicleincludeddriversbydriverid/{vehicleId}")]
 
     }
 }

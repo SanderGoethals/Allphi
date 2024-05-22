@@ -37,7 +37,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
 
                 if (fuelCard == null)
                 {
-                    return NotFound("No fuelcards found.");
+                    return NotFound("No fuelcard found.");
                 }
 
                 FuelCardDto fuelCardDto = MapToFuelCardDto(fuelCard);
@@ -77,9 +77,9 @@ namespace AllPhi.HoGent.RestApi.Controllers
 
                 var (fuelCards, count) = await _fuelCardStore.GetAllFuelCardsAsync(filterFuelCard, sortBy, isAscending, pagination);
 
-                if (fuelCards == null || fuelCards.Count <= 0)
+                if (!fuelCards.Any())
                 {
-                    return NotFound();
+                    return NotFound( new { Message = "No vehicles found."});
                 }
 
                 var fuelCardListDtos = new FuelCardListDto

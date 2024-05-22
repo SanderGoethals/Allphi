@@ -25,7 +25,7 @@ namespace AllPhi.HoGent.Testing.MockData
                 CarBrand = CarBrand.Bmw,
                 NumberOfDoors = NumberOfDoors.FiveDoors,
                 FuelType = FuelType.Benzine,
-                TypeOfCar = TypeOfCar.PassangerCar,
+                TypeOfCar = TypeOfCar.PassengerCar,
                 VehicleColor = VehicleColor.Black,
                 Status = Status.Active,
                 InspectionDate = DateTime.Now.AddYears(-1),
@@ -48,6 +48,17 @@ namespace AllPhi.HoGent.Testing.MockData
             };
 
             mock.Setup(x => x.GetVehicleByIdAsync(mockVehicle_1.Id)).ReturnsAsync(mockVehicle_1);
+
+            mock.Setup(x => x.GetAllVehiclesAsync(It.IsAny<FilterVehicle>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Pagination?>()))
+                                .ReturnsAsync((new List<Vehicle> { mockVehicle_1, mockVehicle_2 }, 2));
+
+            mock.Setup(x => x.AddVehicle(It.IsAny<Vehicle>())).Returns(Task.CompletedTask);
+
+            mock.Setup(x => x.UpdateVehicle(It.IsAny<Vehicle>())).Returns(Task.CompletedTask);
+
+            mock.Setup(x => x.RemoveVehicle(It.IsAny<Guid>())).Returns(Task.CompletedTask);
+
+            mock.Setup(x => x.GetVehicleByIdAsync(It.IsAny<Guid>())).ReturnsAsync(It.IsAny<Vehicle>);
 
             return mock;
         }
