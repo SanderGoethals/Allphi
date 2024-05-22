@@ -7,6 +7,7 @@ using Moq;
 using AllPhi.HoGent.Datalake.Data.Models.Enums;
 using AllPhi.HoGent.Datalake.Data.Models;
 using AllPhi.HoGent.Datalake.Data.Store;
+using AllPhi.HoGent.Datalake.Data.Helpers;
 
 namespace AllPhi.HoGent.Testing.MockData
 {
@@ -36,6 +37,17 @@ namespace AllPhi.HoGent.Testing.MockData
                 CardNumber = "987654321",
                 Status = Status.Active,
             };
+
+            mock.Setup(x => x.GetFuelCardByFuelCardIdAsync(It.IsAny<Guid>())).ReturnsAsync(fuelcardMock_1);
+
+            mock.Setup(x => x.GetAllFuelCardsAsync(It.IsAny<FilterFuelCard>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Pagination?>()))
+                             .ReturnsAsync((new List<FuelCard> { fuelcardMock_1, fuelCardMock_2,}, 2));
+
+            mock.Setup(x => x.AddFuelCard(It.IsAny<FuelCard>())).Returns(Task.CompletedTask);
+
+            mock.Setup(x => x.UpdateFuelCard(It.IsAny<FuelCard>())).Returns(Task.CompletedTask);
+
+            mock.Setup(x => x.RemoveFuelCard(It.IsAny<Guid>())).Returns(Task.CompletedTask);
 
             return mock;
         }
