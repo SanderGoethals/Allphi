@@ -77,26 +77,6 @@ namespace AllPhi.HoGent.Testing.ApiTest
         }
 
         [Fact]
-        public async Task GetAllVehicles_ReturnsNotFound()
-        {
-            #region Arrange
-            var vehicleStoreMock = VehicleStoreMock.GetVehicleStoreMock();
-            var driverVehicleStoreMock = DriverVehicleStoreMock.GetDriverVehicleStoreMock();
-            vehicleStoreMock.Setup(x => x.GetAllVehiclesAsync(It.IsAny<FilterVehicle>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Pagination?>()))
-                                .ReturnsAsync((new List<Vehicle> {}, 0));
-            var controller = new VehiclesController(vehicleStoreMock.Object, driverVehicleStoreMock.Object);
-            #endregion
-
-            #region Act
-            var result = await controller.GetAllVehicles(null, null);
-            #endregion
-
-            #region Assert
-            Assert.IsType<NotFoundObjectResult>(result.Result);
-            #endregion
-        }
-
-        [Fact]
         public async Task GetAllVehicles_ReturnsBadRequest()
         {
             #region Arrange

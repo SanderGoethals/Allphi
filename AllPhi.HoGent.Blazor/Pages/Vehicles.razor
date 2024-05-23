@@ -33,12 +33,12 @@ else
                                 <div class="d-flex flex-wrap  align-items-center">
                                     <button type="button" class="btn buttons-succes m-2" @onclick="AddNewVehicle">Voertuig toevoegen</button>
                                     <div class="form-floating">
-                                        <input class="form-control m-2 search-top" placeholder="Zoek op nummerplaat" id="searchOnLicencePlate" @bind="_searchLicencePlate" @oninput="OnChangeLicencePlate" />
-                                        <label class="modal-form-label" for="searchOnLicencePlate">nummerplaat</label>
-                                    </div>
-                                    <div class="form-floating">
                                         <input class="form-control m-2 search-top" placeholder="Zoek op chassisnummer" id="searchOnChassisNumber" @bind="_searchChassisNumber" @oninput="OnChangeChassisNumber" />
                                         <label class="modal-form-label" for="searchOnChassisNumber">chassisnummer</label>
+                                    </div>
+                                    <div class="form-floating">
+                                        <input class="form-control m-2 search-top" placeholder="Zoek op nummerplaat" id="searchOnLicencePlate" @bind="_searchLicencePlate" @oninput="OnChangeLicencePlate" />
+                                        <label class="modal-form-label" for="searchOnLicencePlate">nummerplaat</label>
                                     </div>
                                     <button class="btn p-0 download-excel download-size" type="button" title="Download Excel" @onclick="ExportData">
                                         <span class="download-excel fa fa-file-excel font-size-x-large "></span>

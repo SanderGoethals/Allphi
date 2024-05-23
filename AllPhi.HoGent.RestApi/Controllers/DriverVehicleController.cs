@@ -27,11 +27,6 @@ namespace AllPhi.HoGent.RestApi.Controllers
             {
                 var (driverVehicles, count) = await _driverVehicleStore.GetAllDriverVehicleAsync();
 
-                //if (!driverVehicles.Any())
-                //{
-                //    return NotFound(new { Messagd = "No drivers found." });
-                //}
-
                 var driverVehicleListDtos = new DriverVehicleListDto
                 {
                     DriverVehicleDtos = MapToDriverVehicleListDto(driverVehicles),

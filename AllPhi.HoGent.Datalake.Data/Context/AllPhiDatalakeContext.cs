@@ -28,15 +28,15 @@ namespace AllPhi.HoGent.Datalake.Data.Context
             modelBuilder.Entity<FuelCardDriver>().HasKey(fcd => new { fcd.DriverId, fcd.FuelCardId });
             modelBuilder.Entity<DriverVehicle>().HasKey(dv => new { dv.DriverId, dv.VehicleId });
 
-            modelBuilder.Entity<Vehicle>().Property(e => e.NumberOfDoors).HasConversion<string>();
-            modelBuilder.Entity<Vehicle>().Property(e => e.TypeOfCar).HasConversion<string>();
-            modelBuilder.Entity<Vehicle>().Property(e => e.VehicleColor).HasConversion<string>();
-            modelBuilder.Entity<Vehicle>().Property(e => e.FuelType).HasConversion<string>();
-            modelBuilder.Entity<Vehicle>().Property(e => e.CarBrand).HasConversion<string>();
+            //modelBuilder.Entity<Vehicle>().Property(e => e.NumberOfDoors).HasConversion<string>();
+            //modelBuilder.Entity<Vehicle>().Property(e => e.TypeOfCar).HasConversion<string>();
+            //modelBuilder.Entity<Vehicle>().Property(e => e.VehicleColor).HasConversion<string>();
+            //modelBuilder.Entity<Vehicle>().Property(e => e.FuelType).HasConversion<string>();
+            //modelBuilder.Entity<Vehicle>().Property(e => e.CarBrand).HasConversion<string>();
 
-            modelBuilder.Entity<Driver>().Property(e => e.TypeOfDriverLicense).HasConversion<string>();
+            //modelBuilder.Entity<Driver>().Property(e => e.TypeOfDriverLicense).HasConversion<string>();
 
-            modelBuilder.Entity<FuelCardFuelType>().Property(e => e.FuelType).HasConversion<string>();
+            //modelBuilder.Entity<FuelCardFuelType>().Property(e => e.FuelType).HasConversion<string>();
 
             modelBuilder.Entity<Vehicle>().Property(v => v.CreatedAt).HasDefaultValueSql("GETDATE()");
             modelBuilder.Entity<Driver>().Property(v => v.CreatedAt).HasDefaultValueSql("GETDATE()");
