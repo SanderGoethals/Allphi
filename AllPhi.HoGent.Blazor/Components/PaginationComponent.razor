@@ -70,6 +70,15 @@
             margin-bottom: 32px;
         }
     }
+
+    .btn:disabled, .btn.disabled, fieldset:disabled .btn {
+        color: var(--bs-btn-disabled-color);
+        pointer-events: none;
+        background-color: #2099c68a !important;
+        border-color: #2099c68a !important;
+        opacity: var(--bs-btn-disabled-opacity);
+    }
+
 </style>
 
 
@@ -80,6 +89,14 @@
 </div>
 <div class="d-flex flex-between-center justify-content-between pagination-row">
     <div class="d-flex justify-content-start b-pagination">
+        <button type="button" disabled="@(CurrentPage == 1)" class="px-1 mx-1 btn btn-sm btn-primary @(CurrentPage == 1 ? "pagination-icon" : "btn-pagination")" @onclick="() => SetPage(1)">
+            <span class="fa fa-backward-step @(CurrentPage == 1 ? "pagination-icon" : "")"></span>
+        </button>
+
+        <button type="button" disabled="@(CurrentPage <= 1)" class="px-1 mx-1 btn btn-sm btn-primary @(CurrentPage <= 1 ? "pagination-icon" : "btn-pagination")" @onclick="() => SetPage(CurrentPage - 1)">
+            <span class="fa fa-backward @(CurrentPage <= 1 ? "pagination-icon" : "")"></span>
+        </button>
+
         @for (var i = StartPage; i <= EndPage; i++)
         {
             var pageNumber = i;
@@ -92,6 +109,14 @@
                 <button type="button" class="px-2 mx-1 btn btn-sm btn-primary btn-pagination" @onclick="() => SetPage(pageNumber)">@i</button>
             }
         }
+
+        <button type="button" disabled="@(CurrentPage >= TotalPages)" class="px-1 mx-1 btn btn-sm btn-primary @(CurrentPage >= TotalPages ? "pagination-icon" : "btn-pagination")" @onclick="() => SetPage(CurrentPage + 1)">
+            <span class="fa fa-forward @(CurrentPage >= TotalPages ? "pagination-icon" : "")"></span>
+        </button>
+
+        <button type="button" disabled="@(CurrentPage == TotalPages)" class="px-1 mx-1 btn btn-sm btn-primary @(CurrentPage == TotalPages ? "pagination-icon" : "btn-pagination")" @onclick="() => SetPage(TotalPages)">
+            <span class="fa fa-forward-step @(CurrentPage == TotalPages ? "pagination-icon" : "")"></span>
+        </button>
     </div>
     <div class="d-flex align-items-end">
         <div>
@@ -104,10 +129,10 @@
                 </select>
             </div>
         </div>
-        <div class="d-flex">
+        @*<div class="d-flex">
             <button class="btn btn-primary ms-2 btn-pagination-style" @onclick="() => SetPage(CurrentPage - 1)" disabled="@((CurrentPage <= 1))">Previous</button>
             <button class="btn btn-primary px-4 ms-2 btn-pagination-style" @onclick="() => SetPage(CurrentPage + 1)" disabled="@((CurrentPage >= TotalPages))">Next</button>
-        </div>
+        </div>*@
     </div>
 </div>
 
