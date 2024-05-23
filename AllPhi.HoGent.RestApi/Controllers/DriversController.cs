@@ -25,50 +25,88 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
         [HttpGet("getalldrivers")]
-        public async Task<ActionResult<(List<DriverDto>, int)>> GetAllDrivers([FromQuery][Optional] string? searchByFirstName,
-                                                                              [FromQuery][Optional] string? searchByLastName,
-                                                                              [FromQuery][Optional] string? searchByRegisternumber, 
-                                                                              [FromQuery][Optional] string? sortBy, 
-                                                                              [FromQuery][Optional] bool isAscending, 
-                                                                              [FromQuery] int? pageNumber = null, 
-                                                                              [FromQuery] int? pageSize = null)
+        public async Task<ActionResult<DriverListDto>> GetAllDrivers([FromQuery][Optional] string? searchByFirstName,
+                                                                   [FromQuery][Optional] string? searchByLastName,
+                                                                   [FromQuery][Optional] string? searchByRegisternumber,
+                                                                   [FromQuery][Optional] string? sortBy,
+                                                                   [FromQuery][Optional] bool isAscending,
+                                                                   [FromQuery] int? pageNumber = null,
+                                                                   [FromQuery] int? pageSize = null)
         {
-            FilterDriver? filterDriver = new() { SearchByFirstName = searchByFirstName ?? "", SearchByLastName = searchByLastName ?? "", SearchByRegisternumber = searchByRegisternumber ?? "" };
-
-            Pagination? pagination = null;
-            if (pageNumber.HasValue && pageSize.HasValue)
+            try
             {
-                pagination = new Pagination(pageNumber.Value, pageSize.Value);
+                FilterDriver? filterDriver = new()
+                {
+                    SearchByFirstName = searchByFirstName ?? "",
+                    SearchByLastName = searchByLastName ?? "",
+                    SearchByRegisternumber = searchByRegisternumber ?? ""
+                };
+
+                Pagination? pagination = null;
+                if (pageNumber.HasValue && pageSize.HasValue)
+                {
+                    pagination = new Pagination(pageNumber.Value, pageSize.Value);
+                }
+
+                var (drivers, count) = await _driverStore.GetAllDriversAsync(filterDriver, sortBy, isAscending, pagination);
+
+                var driverListDtos = new DriverListDto
+                {
+                    DriverDtos = MapToDriverListDto(drivers),
+                    TotalItems = count
+                };
+
+                return Ok(driverListDtos);
             }
-
-            var (drivers, count) = await _driverStore.GetAllDriversAsync(filterDriver, sortBy, isAscending, pagination);
-
-            var driverListDtos = new DriverListDto
+            catch (Exception ex)
             {
-                DriverDtos = MapToDriverListDto(drivers),
-                TotalItems = count
-            };
-
-
-
-            return Ok(driverListDtos);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
+
+
 
         [HttpGet("getdriverbyid/{driverId}")]
         public async Task<ActionResult<DriverDto>> GetDriverById(Guid driverId)
         {
-            Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
-            if (driver == null)
+            try
             {
-                return NotFound("Driver not found");
+                if (driverId == null || driverId.Equals(Guid.Empty))
+                {
+                    return BadRequest(new { Message = "Driver ID not found." });
+                }
+
+                Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
+                if (driver == null)
+                {
+                    return NotFound("Driver not found");
+                }
+                var driverDto = MapToDriverDto(driver);
+                return Ok(driverDto);
             }
-            var driverDto = MapToDriverDto(driver);
-            return Ok(driverDto);
+            catch (ArgumentNullException ex)
+            {
+                return BadRequest("Invalid driver ID.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound("Driver store operation failed.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while processing your request." });
+            }
         }
+
 
         [HttpPost("adddriver")]
         public async Task<IActionResult> AddDriver([FromBody] DriverDto driverDto)
         {
+            if (driverDto == null)
+            {
+                return BadRequest("Driver data is null.");
+            }
+
             if (_driverStore.DriverWithRegisterNumberExists(driverDto.RegisterNumber))
             {
                 return BadRequest("Driver with this register number already exists");
@@ -83,10 +121,6 @@ namespace AllPhi.HoGent.RestApi.Controllers
                 Driver driver = MapToDriver(driverDto);
                 await _driverStore.AddDriver(driver);
                 return Ok("Driver successfully added");
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest($"Invalid driver ID: {ex.Message}");
             }
             catch (Exception ex)
             {
