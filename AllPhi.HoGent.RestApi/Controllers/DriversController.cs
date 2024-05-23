@@ -26,12 +26,12 @@ namespace AllPhi.HoGent.RestApi.Controllers
 
         [HttpGet("getalldrivers")]
         public async Task<ActionResult<DriverListDto>> GetAllDrivers([FromQuery][Optional] string? searchByFirstName,
-                                                                 [FromQuery][Optional] string? searchByLastName,
-                                                                 [FromQuery][Optional] string? searchByRegisternumber,
-                                                                 [FromQuery][Optional] string? sortBy,
-                                                                 [FromQuery][Optional] bool isAscending,
-                                                                 [FromQuery] int? pageNumber = null,
-                                                                 [FromQuery] int? pageSize = null)
+                                                                   [FromQuery][Optional] string? searchByLastName,
+                                                                   [FromQuery][Optional] string? searchByRegisternumber,
+                                                                   [FromQuery][Optional] string? sortBy,
+                                                                   [FromQuery][Optional] bool isAscending,
+                                                                   [FromQuery] int? pageNumber = null,
+                                                                   [FromQuery] int? pageSize = null)
         {
             try
             {
@@ -65,11 +65,17 @@ namespace AllPhi.HoGent.RestApi.Controllers
         }
 
 
+
         [HttpGet("getdriverbyid/{driverId}")]
         public async Task<ActionResult<DriverDto>> GetDriverById(Guid driverId)
         {
             try
             {
+                if (driverId == null || driverId.Equals(Guid.Empty))
+                {
+                    return BadRequest(new { Message = "Driver ID not found." });
+                }
+
                 Driver driver = await _driverStore.GetDriverByIdAsync(driverId);
                 if (driver == null)
                 {
@@ -88,7 +94,7 @@ namespace AllPhi.HoGent.RestApi.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while processing your request.");
+                return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
 
@@ -96,6 +102,11 @@ namespace AllPhi.HoGent.RestApi.Controllers
         [HttpPost("adddriver")]
         public async Task<IActionResult> AddDriver([FromBody] DriverDto driverDto)
         {
+            if (driverDto == null)
+            {
+                return BadRequest("Driver data is null.");
+            }
+
             if (_driverStore.DriverWithRegisterNumberExists(driverDto.RegisterNumber))
             {
                 return BadRequest("Driver with this register number already exists");
@@ -110,10 +121,6 @@ namespace AllPhi.HoGent.RestApi.Controllers
                 Driver driver = MapToDriver(driverDto);
                 await _driverStore.AddDriver(driver);
                 return Ok("Driver successfully added");
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest($"Invalid driver ID: {ex.Message}");
             }
             catch (Exception ex)
             {
