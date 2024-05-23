@@ -60,8 +60,6 @@ namespace AllPhi.HoGent.Testing.MockData
 
             mock.Setup(x => x.RemoveVehicle(It.IsAny<Guid>())).Returns(Task.CompletedTask);
 
-            
-
             return mock;
         }
     }

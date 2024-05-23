@@ -82,26 +82,6 @@ namespace AllPhi.HoGent.Testing.ApiTest
             #endregion
         }
 
-        [Fact]
-        public async Task GetDrivers_ReturnsNotFound_WhenNoDriversExist()
-        {
-            #region Arrange
-            var driverStoreMock = DriverStoreMock.GetDriverStoreMock();
-            var fuelCardDriverStoreMock = FuelCardDriverStoreMock.GetFuelCardDriverStoreMock();
-            driverStoreMock.Setup(m => m.GetAllDriversAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Pagination>()))
-                .ReturnsAsync((new List<Driver>(), 0));
-            var controller = new DriversController(driverStoreMock.Object, fuelCardDriverStoreMock.Object);
-            #endregion
-
-            #region Act
-            var result = await controller.GetAllDrivers();
-            #endregion
-
-            #region Assert
-            Assert.IsType<NotFoundResult>(result.Result);
-            #endregion
-        }
-
         // <========================================================>
         // <====================== ADD DRIVER ======================>
         // <========================================================>

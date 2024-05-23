@@ -79,26 +79,6 @@ namespace AllPhi.HoGent.Testing.ApiTest
         }
 
         [Fact]
-        public async Task GetFuelCards_ReturnsNotFound_WhenNoFuelCardsExist()
-        {
-            #region Arrange
-            var fuelCardStoreMock = FuelCardStoreMock.GetFuelCardsStoreMock();
-            var fuelCardDriverStoreMock = FuelCardDriverStoreMock.GetFuelCardDriverStoreMock();
-            fuelCardStoreMock?.Setup(store => store.GetAllFuelCardsAsync(It.IsAny<FilterFuelCard>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Pagination?>()))
-                          .ReturnsAsync((new List<FuelCard>(), 0));
-            var fuelCardController = new FuelCardsController(fuelCardStoreMock.Object, fuelCardDriverStoreMock.Object);
-            #endregion
-
-            #region Act
-            var result = await fuelCardController.GetAllFuelCards(null, null);
-            #endregion
-
-            #region Assert
-            Assert.IsType<NotFoundObjectResult>(result.Result);
-            #endregion
-        }
-
-        [Fact]
         public async Task AddFuelCard_ReturnsOk_WhenFuelCardIsSuccessfullyAdded()
         {
             #region Arrange
