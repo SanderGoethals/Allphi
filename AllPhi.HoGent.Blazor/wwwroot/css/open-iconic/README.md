@@ -5,7 +5,7 @@
 
 
 
-## What's in Open Iconic?
+## What's in Open Iconic? 
 
 * 223 icons designed to be legible down to 8 pixels
 * Super-light SVG files - 61.8 for the entire set 
